@@ -65,8 +65,11 @@ export default function ProductDetailPage() {
 
       <div className="product-detail-info">
         <span className="product-detail-category">{product.category}</span>
+        {product.company && (
+          <span className="product-detail-company">{product.company}</span>
+        )}
         <h1>{product.name}</h1>
-        <div className="product-detail-price">${product.price.toFixed(2)}</div>
+        <div className="product-detail-price">{product.price.toFixed(2)} EGP</div>
         <p className="product-detail-description">{product.description}</p>
         <div className="product-detail-meta">
           <span>

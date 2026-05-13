@@ -41,6 +41,7 @@ export async function fetchProducts(): Promise<Product[]> {
       String(row['ImageURLs'] || row['imageurls'] || row['ImageURL'] || row['imageUrl'] || '')
     ),
     category: String(row['Category'] || row['category'] || ''),
+    company: String(row['Company'] || row['company'] || ''),
   }))
 
   return products.filter((p) => p.name)

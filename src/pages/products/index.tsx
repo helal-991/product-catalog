@@ -4,13 +4,24 @@ import { isAuthenticated } from '@/lib/auth'
 import { Product } from '@/lib/types'
 import ProductCard from '@/components/ProductCard'
 
+const brandNames: Record<string, string> = {
+  'master-elektron': 'Master Elektron',
+  'argosta': 'Argosta',
+}
+
 export default function ProductsPage() {
   const router = useRouter()
+  const { brand: brandSlug } = router.query
   const [authed, setAuthed] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+
+  const selectedBrand = brandSlug && brandSlug !== ''
+    ? (brandNames[String(brandSlug).toLowerCase()] || String(brandSlug))
+    : ''
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -40,7 +51,17 @@ export default function ProductsPage() {
     }
   }
 
-  const filtered = products.filter((p) => {
+  const companyFiltered = selectedBrand
+    ? products.filter((p) => p.company.toLowerCase() === selectedBrand.toLowerCase())
+    : products
+
+  const categories = Array.from(new Set(companyFiltered.map((p) => p.category).filter(Boolean))).sort()
+
+  const categoryFiltered = selectedCategory
+    ? companyFiltered.filter((p) => p.category === selectedCategory)
+    : companyFiltered
+
+  const searchFiltered = categoryFiltered.filter((p) => {
     if (!search) return true
     const q = search.toLowerCase()
     return (
@@ -58,8 +79,11 @@ export default function ProductsPage() {
   return (
     <div>
       <div className="products-header">
-        <h1>Products</h1>
-        <p>{products.length} products available</p>
+        <div className="products-header-top">
+          <a href="/brands" className="back-link">&larr; Change Brand</a>
+          <h1>{selectedBrand || 'All Products'}</h1>
+        </div>
+        <p>{searchFiltered.length} product{searchFiltered.length !== 1 ? 's' : ''}</p>
         <input
           type="text"
           placeholder="Search by name, SKU, or category..."
@@ -70,15 +94,35 @@ export default function ProductsPage() {
         />
       </div>
 
+      {categories.length > 0 && (
+        <div className="category-filters">
+          <button
+            className={`category-chip ${!selectedCategory ? 'active' : ''}`}
+            onClick={() => setSelectedCategory('')}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              className={`category-chip ${selectedCategory === cat ? 'active' : ''}`}
+              onClick={() => setSelectedCategory(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
       {error && <div className="error-msg">{error}</div>}
 
-      {filtered.length === 0 ? (
+      {searchFiltered.length === 0 ? (
         <div className="empty-state">
           {search ? 'No products match your search.' : 'No products found.'}
         </div>
       ) : (
         <div className="products-grid">
-          {filtered.map((product) => (
+          {searchFiltered.map((product) => (
             <ProductCard key={product.sku} product={product} />
           ))}
         </div>

@@ -6,4 +6,5 @@ export interface Product {
   barcode: string
   imageUrls: string[]
   category: string
+  company: string
 }

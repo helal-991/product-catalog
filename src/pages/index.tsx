@@ -10,7 +10,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      router.replace('/products')
+      router.replace('/brands')
     }
   }, [router])
 
@@ -21,7 +21,7 @@ export default function LoginPage() {
 
     if (checkPassword(password)) {
       login()
-      router.replace('/products')
+      router.replace('/brands')
     } else {
       setError('Incorrect password')
       setLoading(false)
