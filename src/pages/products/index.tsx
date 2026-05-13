@@ -1,36 +1,29 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { auth } from '@/lib/firebase'
-import { onAuthStateChanged } from 'firebase/auth'
+import { isAuthenticated } from '@/lib/auth'
 import { Product } from '@/lib/types'
 import ProductCard from '@/components/ProductCard'
 
 export default function ProductsPage() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [authed, setAuthed] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    if (!auth) return
-    const unsub = onAuthStateChanged(auth, (u) => {
-      if (!u) {
-        router.replace('/')
-      } else {
-        setUser(u)
-        setLoading(false)
-      }
-    })
-    return () => unsub()
+    if (!isAuthenticated()) {
+      router.replace('/')
+    } else {
+      setAuthed(true)
+    }
   }, [router])
 
   useEffect(() => {
-    if (!user) return
+    if (!authed) return
     fetchProducts()
-  }, [user])
+  }, [authed])
 
   const fetchProducts = async () => {
     setDataLoading(true)
@@ -58,7 +51,7 @@ export default function ProductsPage() {
     )
   })
 
-  if (loading || dataLoading) {
+  if (!authed || dataLoading) {
     return <div className="loading">Loading...</div>
   }
 

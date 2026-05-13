@@ -1,42 +1,44 @@
 import React, { ReactNode, useEffect, useState } from 'react'
-import { auth, signOut } from '@/lib/firebase'
-import { onAuthStateChanged, User } from 'firebase/auth'
+import { useRouter } from 'next/router'
+import { isAuthenticated, logout } from '@/lib/auth'
 
 interface LayoutProps {
   children: ReactNode
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const [user, setUser] = useState<User | null>(null)
+  const router = useRouter()
+  const [authed, setAuthed] = useState(false)
 
   useEffect(() => {
-    if (!auth) return
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u))
-    return () => unsub()
+    setAuthed(isAuthenticated())
   }, [])
 
-  const handleLogout = async () => {
-    if (!auth) return
-    await signOut(auth)
+  const handleLogout = () => {
+    logout()
+    router.push('/')
   }
+
+  const showHeader = router.pathname !== '/' || authed
 
   return (
     <div className="layout">
-      <header className="header">
-        <div className="header-inner">
-          <a href="/products" className="logo">
-            Product Catalog
-          </a>
-          {user && (
-            <div className="header-right">
-              <span className="phone-display">{user.phoneNumber}</span>
-              <button onClick={handleLogout} className="btn-outline btn-sm">
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-      </header>
+      {showHeader && (
+        <header className="header">
+          <div className="header-inner">
+            <a href="/products" className="logo">
+              Product Catalog
+            </a>
+            {authed && (
+              <div className="header-right">
+                <button onClick={handleLogout} className="btn-outline btn-sm">
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+      )}
       <main className="main">{children}</main>
     </div>
   )

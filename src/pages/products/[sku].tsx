@@ -1,35 +1,28 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { auth } from '@/lib/firebase'
-import { onAuthStateChanged } from 'firebase/auth'
+import { isAuthenticated } from '@/lib/auth'
 import { Product } from '@/lib/types'
 import ImageGallery from '@/components/ImageGallery'
 
 export default function ProductDetailPage() {
   const router = useRouter()
   const { sku } = router.query
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [authed, setAuthed] = useState(false)
   const [product, setProduct] = useState<Product | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!auth) return
-    const unsub = onAuthStateChanged(auth, (u) => {
-      if (!u) {
-        router.replace('/')
-      } else {
-        setUser(u)
-        setLoading(false)
-      }
-    })
-    return () => unsub()
+    if (!isAuthenticated()) {
+      router.replace('/')
+    } else {
+      setAuthed(true)
+    }
   }, [router])
 
   useEffect(() => {
-    if (!user || !sku) return
+    if (!authed || !sku) return
     fetchProduct()
-  }, [user, sku])
+  }, [authed, sku])
 
   const fetchProduct = async () => {
     setError('')
@@ -44,12 +37,10 @@ export default function ProductDetailPage() {
       setProduct(found)
     } catch (err: any) {
       setError(err.message)
-    } finally {
-      setLoading(false)
     }
   }
 
-  if (loading) {
+  if (!authed) {
     return <div className="loading">Loading...</div>
   }
 
