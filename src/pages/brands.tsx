@@ -3,6 +3,14 @@ import { useRouter } from 'next/router'
 import { isAuthenticated } from '@/lib/auth'
 import { Product } from '@/lib/types'
 
+function brandSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+function brandLogoPath(name: string): string {
+  return `/${brandSlug(name)}-logo.png`
+}
+
 export default function BrandsPage() {
   const router = useRouter()
   const [authed, setAuthed] = useState(false)
@@ -45,15 +53,32 @@ export default function BrandsPage() {
       <p>Select a brand to view its products</p>
       <div className="brands-grid">
         {brands.map((brand) => {
-          const slug = brand === 'All Products' ? '' : brand.toLowerCase().replace(/\s+/g, '-')
+          const slug = brand === 'All Products' ? '' : brandSlug(brand)
+          const logoSrc = brandLogoPath(brand)
+          const initials = brand.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
           return (
             <button
               key={brand}
               className="brand-card"
               onClick={() => router.push(`/products?brand=${slug}`)}
             >
+              <div className="brand-logo-wrap">
+                <img
+                  src={logoSrc}
+                  alt={brand}
+                  className="brand-logo"
+                  onError={(e) => {
+                    const el = e.currentTarget
+                    el.style.display = 'none'
+                    const next = el.nextElementSibling as HTMLElement
+                    if (next) next.style.display = 'flex'
+                  }}
+                />
+                <div className="brand-logo-fallback" style={{ display: 'none' }}>
+                  {initials}
+                </div>
+              </div>
               <span className="brand-name">{brand}</span>
-              <span className="brand-arrow">&rarr;</span>
             </button>
           )
         })}

@@ -26,8 +26,9 @@ export default function Layout({ children }: LayoutProps) {
       {showHeader && (
         <header className="header">
           <div className="header-inner">
-            <a href="/products" className="logo">
-              Product Catalog
+            <a href="/brands" className="logo">
+              <img src="/elbeshbeshy-logo.png" alt="Elbeshbeshy" className="logo-img" />
+              <span>Elbeshbeshy Product Catalog</span>
             </a>
             {authed && (
               <div className="header-right">
