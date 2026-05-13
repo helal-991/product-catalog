@@ -1,10 +1,9 @@
-import React, { useState, useEffect, FormEvent } from 'react'
+import React, { useState, useEffect, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/router'
 import {
   auth,
   signInWithPhoneNumber,
   RecaptchaVerifier,
-  PhoneAuthProvider,
 } from '@/lib/firebase'
 import { onAuthStateChanged, ConfirmationResult } from 'firebase/auth'
 
@@ -16,6 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null)
+  const verifierRef = useRef<RecaptchaVerifier | null>(null)
 
   useEffect(() => {
     if (!auth) return
@@ -27,15 +27,24 @@ export default function LoginPage() {
     return () => unsub()
   }, [router])
 
-  const setupRecaptcha = () => {
-    if (!auth || !window) return null
-    if ((window as any).recaptchaVerifier) {
-      ;(window as any).recaptchaVerifier.clear()
+  useEffect(() => {
+    return () => {
+      if (verifierRef.current) {
+        try { verifierRef.current.clear() } catch {}
+        verifierRef.current = null
+      }
     }
+  }, [])
+
+  const getRecaptchaVerifier = () => {
+    if (verifierRef.current) return verifierRef.current
+    if (!auth) return null
+    const container = document.getElementById('recaptcha-container')
+    if (container) container.innerHTML = ''
     const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       size: 'invisible',
-    });
-    (window as any).recaptchaVerifier = verifier
+    })
+    verifierRef.current = verifier
     return verifier
   }
 
@@ -47,7 +56,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const verifier = setupRecaptcha()
+      const verifier = getRecaptchaVerifier()
       if (!verifier) throw new Error('Failed to setup reCAPTCHA')
 
       const formattedPhone = phone.startsWith('+') ? phone : `+${phone.replace(/\D/g, '')}`
@@ -83,6 +92,10 @@ export default function LoginPage() {
     setOtp('')
     setError('')
     setConfirmation(null)
+    if (verifierRef.current) {
+      try { verifierRef.current.clear() } catch {}
+      verifierRef.current = null
+    }
   }
 
   return (
@@ -136,7 +149,7 @@ export default function LoginPage() {
           </form>
         )}
 
-        <div id="recaptcha-container" />
+        <div id="recaptcha-container" key={step} />
       </div>
     </div>
   )
