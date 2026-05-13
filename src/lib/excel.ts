@@ -1,0 +1,55 @@
+import * as XLSX from 'xlsx'
+import { Product } from './types'
+
+export async function fetchProducts(): Promise<Product[]> {
+  const url = process.env.NEXT_PUBLIC_EXCEL_URL
+  if (!url) {
+    throw new Error('EXCEL_URL environment variable is not set')
+  }
+
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Excel file: ${response.statusText}`)
+  }
+
+  const contentType = response.headers.get('content-type') || ''
+  const isCsv = contentType.includes('text/csv') || url.includes('export?format=csv')
+
+  let rows: Record<string, string | number>[]
+
+  if (isCsv) {
+    const text = await response.text()
+    const workbook = XLSX.read(text, { type: 'string', raw: true })
+    const sheetName = workbook.SheetNames[0]
+    const sheet = workbook.Sheets[sheetName]
+    rows = XLSX.utils.sheet_to_json<Record<string, string | number>>(sheet, { raw: true })
+  } else {
+    const arrayBuffer = await response.arrayBuffer()
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+    const sheetName = workbook.SheetNames[0]
+    const sheet = workbook.Sheets[sheetName]
+    rows = XLSX.utils.sheet_to_json<Record<string, string | number>>(sheet)
+  }
+
+  const products: Product[] = rows.map((row) => ({
+    name: String(row['Name'] || row['name'] || ''),
+    description: String(row['Description'] || row['description'] || ''),
+    price: parseFloat(String(row['Price'] || row['price'] || '0')),
+    sku: String(row['SKU'] || row['sku'] || row['Sku'] || ''),
+    barcode: String(row['Barcode'] || row['barcode'] || ''),
+    imageUrls: parseImageUrls(
+      String(row['ImageURLs'] || row['imageurls'] || row['ImageURL'] || row['imageUrl'] || '')
+    ),
+    category: String(row['Category'] || row['category'] || ''),
+  }))
+
+  return products.filter((p) => p.name)
+}
+
+function parseImageUrls(value: string): string[] {
+  if (!value) return []
+  return value
+    .split(/[,;]/)
+    .map((url) => url.trim())
+    .filter((url) => url.length > 0)
+}
