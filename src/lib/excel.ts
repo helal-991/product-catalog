@@ -34,7 +34,8 @@ export async function fetchProducts(): Promise<Product[]> {
   const products: Product[] = rows.map((row) => ({
     name: String(row['Name'] || row['name'] || ''),
     description: String(row['Description'] || row['description'] || ''),
-    price: parseFloat(String(row['Price'] || row['price'] || '0')),
+    rrp: parseFloat(String(row['RRP'] || row['rrp'] || row['Price'] || row['price'] || '0')),
+    rdp: parseFloat(String(row['RDP'] || row['rdp'] || row['Price'] || row['price'] || '0')),
     sku: String(row['SKU'] || row['sku'] || row['Sku'] || ''),
     barcode: String(row['Barcode'] || row['barcode'] || ''),
     imageUrls: parseImageUrls(

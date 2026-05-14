@@ -1,7 +1,8 @@
 export interface Product {
   name: string
   description: string
-  price: number
+  rrp: number
+  rdp: number
   sku: string
   barcode: string
   imageUrls: string[]

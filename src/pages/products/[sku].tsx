@@ -69,7 +69,10 @@ export default function ProductDetailPage() {
           <span className="product-detail-company">{product.company}</span>
         )}
         <h1>{product.name}</h1>
-        <div className="product-detail-price">{product.price.toFixed(2)} EGP</div>
+        <div className="product-detail-prices">
+          <span className="product-detail-price product-detail-price-rdp">{product.rdp.toFixed(2)} EGP</span>
+          <span className="product-detail-price product-detail-price-rrp">{product.rrp.toFixed(2)} EGP</span>
+        </div>
         <p className="product-detail-description">{product.description}</p>
         <div className="product-detail-meta">
           <span>
