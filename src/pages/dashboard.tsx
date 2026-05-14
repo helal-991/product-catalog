@@ -66,7 +66,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/orders')
       const data = await res.json()
-      setOrders(data || [])
+      setOrders(Array.isArray(data) ? data : [])
     } catch {} finally {
       setOrdersLoading(false)
     }
@@ -77,7 +77,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/products?includeStock=true')
       const data = await res.json()
-      setProducts(data || [])
+      setProducts(Array.isArray(data) ? data : [])
     } catch {} finally {
       setDataLoading(false)
     }
