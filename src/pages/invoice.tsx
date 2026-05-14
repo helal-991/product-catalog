@@ -305,32 +305,8 @@ export default function InvoicePage() {
           </section>
 
           {selectedBrand && (
-            <>
-              <section className="invoice-section">
-                <h2>Stock Overview</h2>
-                <div className="invoice-table-wrap">
-                  <table className="invoice-table">
-                    <thead>
-                      <tr>
-                        <th>SKU</th>
-                        <th>Product Name</th>
-                        <th>Available Stock</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {brandProducts.map((p) => (
-                        <tr key={p.sku || p.name}>
-                          <td>{p.sku || '-'}</td>
-                          <td>{p.name}</td>
-                          <td style={{ fontWeight: 700 }}>{p.stock}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-              <section className="invoice-section">
-                <h2>Add Products</h2>
+            <section className="invoice-section">
+              <h2>Add Products</h2>
                 <div className="invoice-add-row">
                   <div className="input-group">
                     <label>Select Product</label>
@@ -351,7 +327,6 @@ export default function InvoicePage() {
                   </button>
                 </div>
               </section>
-            </>
           )}
 
           {items.length > 0 && (
