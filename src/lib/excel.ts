@@ -36,13 +36,14 @@ export async function fetchProducts(): Promise<Product[]> {
     description: String(row['Description'] || row['description'] || ''),
     rrp: parseFloat(String(row['RRP'] || row['rrp'] || row['Price'] || row['price'] || '0')),
     rdp: parseFloat(String(row['RDP'] || row['rdp'] || row['Price'] || row['price'] || '0')),
-    sku: String(row['SKU'] || row['sku'] || row['Sku'] || ''),
+    sku: String(row['SKU'] || row['sku'] || row['Sku'] || '').trim(),
     barcode: String(row['Barcode'] || row['barcode'] || ''),
+    stock: parseInt(String(row['Stock'] || row['stock'] || '0'), 10) || 0,
     imageUrls: parseImageUrls(
       String(row['ImageURLs'] || row['imageurls'] || row['ImageURL'] || row['imageUrl'] || '')
     ),
-    category: String(row['Category'] || row['category'] || ''),
-    company: String(row['Company'] || row['company'] || ''),
+    category: String(row['Category'] || row['category'] || '').trim(),
+    company: String(row['Company'] || row['company'] || '').trim(),
   }))
 
   return products.filter((p) => p.name)

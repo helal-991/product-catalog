@@ -78,7 +78,6 @@ export default function BrandsPage() {
                   {initials}
                 </div>
               </div>
-              <span className="brand-name">{brand}</span>
             </button>
           )
         })}

@@ -142,8 +142,40 @@ img {
 .login-page {
   min-height: calc(100vh - 80px);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 32px;
+  padding: 40px 20px;
+}
+
+.login-brand-logos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.login-logo-main {
+  height: 350px;
+  width: auto;
+}
+
+.login-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+}
+
+.login-logo-sub {
+  height: 250px;
+  width: auto;
+}
+
+.login-cards {
+  display: flex;
+  gap: 32px;
+  align-items: stretch;
 }
 
 .login-card {
@@ -154,6 +186,8 @@ img {
   width: 100%;
   max-width: 420px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .login-card h1 {
@@ -170,6 +204,11 @@ img {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1;
+}
+
+.login-form .btn {
+  margin-top: auto;
 }
 
 .input-group {
@@ -315,8 +354,8 @@ img {
 
 .product-meta {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 6px;
   margin-top: auto;
   padding-top: 8px;
   border-top: 1px solid var(--border);
@@ -329,26 +368,7 @@ img {
 
 .product-prices {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.product-price {
-  font-size: 1rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.product-price-rdp {
-  color: var(--primary);
-}
-
-.product-price-rrp {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  text-decoration: line-through;
+  gap: 8px;
 }
 
 /* Product Detail Page */
@@ -363,7 +383,8 @@ img {
   grid-column: 1 / -1;
 }
 
-.product-detail-back a {
+.product-detail-back a,
+.product-detail-back .back-btn {
   color: var(--text-muted);
   font-size: 0.875rem;
   display: inline-flex;
@@ -371,8 +392,17 @@ img {
   gap: 4px;
 }
 
-.product-detail-back a:hover {
+.product-detail-back a:hover,
+.product-detail-back .back-btn:hover {
   color: var(--primary);
+}
+
+.product-detail-back .back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
 }
 
 .product-detail-info {
@@ -396,25 +426,55 @@ img {
 
 .product-detail-prices {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  gap: 16px;
 }
 
-.product-detail-price {
-  font-size: 2rem;
+.price-box {
+  background: #590696;
+  color: white;
+  border-radius: 12px;
+  padding: 16px 24px;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.price-box-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+.price-box-value {
+  font-size: 1.5rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.product-detail-price-rdp {
-  color: var(--primary);
+.product-card-price-box {
+  background: #590696;
+  color: white;
+  border-radius: 8px;
+  padding: 6px 12px;
+  text-align: center;
+  min-width: 80px;
 }
 
-.product-detail-price-rrp {
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  text-decoration: line-through;
+.product-card-price-box .price-box-label {
+  font-size: 0.65rem;
+}
+
+.product-card-price-box .price-box-value {
+  font-size: 0.9rem;
+}
+
+.brand-argosta .price-box,
+.brand-argosta .product-card-price-box {
+  background: #004a52;
 }
 
 .product-detail-description {
@@ -521,9 +581,9 @@ img {
 
 .brands-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
-  max-width: 640px;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 32px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -531,15 +591,12 @@ img {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 32px 24px;
+  padding: 32px;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
   transition: all 0.2s;
-  font-size: 1rem;
-  text-align: center;
 }
 
 .brand-card:hover {
@@ -549,8 +606,8 @@ img {
 }
 
 .brand-logo-wrap {
-  width: 100px;
-  height: 100px;
+  width: 400px;
+  height: 400px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -563,21 +620,16 @@ img {
 }
 
 .brand-logo-fallback {
-  width: 100px;
-  height: 100px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
   background: var(--primary);
   color: white;
-  font-size: 2rem;
+  font-size: 5rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.brand-name {
-  font-size: 1.25rem;
-  font-weight: 600;
 }
 
 /* Products Header */
@@ -647,6 +699,290 @@ img {
   color: var(--text-muted);
 }
 
+/* Invoice Page */
+.invoice-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.invoice-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.invoice-header-bar h1 {
+  font-size: 1.75rem;
+}
+
+.invoice-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 48px 40px;
+  max-width: 420px;
+  margin: 80px auto;
+  text-align: center;
+}
+
+.invoice-card h1 {
+  font-size: 1.75rem;
+  margin-bottom: 8px;
+}
+
+.invoice-card p {
+  color: var(--text-muted);
+  margin-bottom: 32px;
+}
+
+.invoice-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.invoice-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.invoice-section h2 {
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.invoice-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.invoice-fields select,
+.invoice-add-row select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  background: white;
+  font-family: inherit;
+}
+
+.invoice-payment-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.invoice-payment-dates label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.invoice-payment-dates input {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.invoice-brand-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.invoice-brand-card {
+  padding: 16px 32px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.invoice-brand-card:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.invoice-brand-card.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.invoice-add-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.invoice-add-row .input-group {
+  flex: 1;
+}
+
+.invoice-table-wrap {
+  overflow-x: auto;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.invoice-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-bottom: 2px solid var(--border);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.invoice-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.invoice-table tfoot td {
+  border-bottom: none;
+  border-top: 2px solid var(--border);
+  padding-top: 12px;
+}
+
+.invoice-qty-input {
+  width: 60px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+  font-family: inherit;
+}
+
+.invoice-price-select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  font-family: inherit;
+}
+
+.invoice-remove-btn {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+.invoice-remove-btn:hover {
+  background: #fecaca;
+}
+
+.invoice-done-section {
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.invoice-done-text {
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  font-size: 1.05rem;
+}
+
+.invoice-actions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.invoice-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 40px;
+  border-radius: 16px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.2s;
+  min-width: 160px;
+}
+
+.invoice-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.invoice-whatsapp-btn {
+  color: #25D366;
+  border-color: #25D366;
+}
+
+.invoice-whatsapp-btn:hover {
+  background: #25D366;
+  color: white;
+}
+
+.invoice-download-btn {
+  color: #590696;
+  border-color: #590696;
+}
+
+.invoice-download-btn:hover {
+  background: #590696;
+  color: white;
+}
+
+/* Dashboard home button */
+.dashboard-home-btn {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 12px 40px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.dashboard-home-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--text-muted);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .product-detail {
@@ -659,8 +995,81 @@ img {
     gap: 16px;
   }
 
+  .product-prices {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .product-card-price-box {
+    padding: 4px 8px;
+  }
+
+  .product-card-price-box .price-box-value {
+    font-size: 0.8rem;
+  }
+
+  .product-card-price-box .price-box-label {
+    font-size: 0.55rem;
+  }
+
+  .product-detail-prices {
+    flex-direction: column;
+  }
+
+  .price-box {
+    padding: 12px 16px;
+  }
+
+  .price-box-value {
+    font-size: 1.2rem;
+  }
+
+  .brands-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .brand-card {
+    padding: 24px;
+  }
+
+  .brand-logo-wrap {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    max-width: 400px;
+  }
+
+  .brand-logo-fallback {
+    width: 100%;
+    height: 100%;
+    font-size: 4rem;
+  }
+
   .login-card {
     padding: 32px 24px;
+  }
+
+  .login-cards {
+    flex-direction: column;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .login-logo-main {
+    height: 200px;
+  }
+
+  .login-logo-sub {
+    height: 140px;
+  }
+
+  .login-logo-row {
+    gap: 40px;
+  }
+
+  .login-brand-logos {
+    gap: 20px;
   }
 
   .main {

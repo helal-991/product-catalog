@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { isAuthenticated } from '@/lib/auth'
-import { Product } from '@/lib/types'
+import { Product, fmtPrice, brandClass } from '@/lib/types'
 import ImageGallery from '@/components/ImageGallery'
 
 export default function ProductDetailPage() {
@@ -31,7 +31,8 @@ export default function ProductDetailPage() {
       if (!res.ok) throw new Error('Failed to load product')
       const data: Product[] = await res.json()
       const found = data.find(
-        (p) => p.sku.toLowerCase() === String(sku).toLowerCase()
+        (p) => p.sku.toLowerCase() === String(sku).toLowerCase() ||
+              p.name.toLowerCase() === String(sku).toLowerCase()
       )
       if (!found) throw new Error('Product not found')
       setProduct(found)
@@ -48,7 +49,7 @@ export default function ProductDetailPage() {
     return (
       <div>
         <div className="product-detail-back">
-          <a href="/products">&larr; Back to products</a>
+          <button onClick={() => router.back()} className="back-btn">&larr; Back to products</button>
         </div>
         <div className="empty-state">{error || 'Product not found'}</div>
       </div>
@@ -58,7 +59,7 @@ export default function ProductDetailPage() {
   return (
     <div className="product-detail">
       <div className="product-detail-back">
-        <a href="/products">&larr; Back to products</a>
+        <button onClick={() => router.back()} className="back-btn">&larr; Back to products</button>
       </div>
 
       <ImageGallery images={product.imageUrls} productName={product.name} />
@@ -69,9 +70,15 @@ export default function ProductDetailPage() {
           <span className="product-detail-company">{product.company}</span>
         )}
         <h1>{product.name}</h1>
-        <div className="product-detail-prices">
-          <span className="product-detail-price product-detail-price-rdp">{product.rdp.toFixed(2)} EGP</span>
-          <span className="product-detail-price product-detail-price-rrp">{product.rrp.toFixed(2)} EGP</span>
+        <div className={`product-detail-prices ${brandClass(product.company)}`}>
+          <div className="price-box">
+            <span className="price-box-label">RRP</span>
+            <strong className="price-box-value">{fmtPrice(product.rrp)} EGP</strong>
+          </div>
+          <div className="price-box">
+            <span className="price-box-label">RDP</span>
+            <strong className="price-box-value">{fmtPrice(product.rdp)} EGP</strong>
+          </div>
         </div>
         <p className="product-detail-description">{product.description}</p>
         <div className="product-detail-meta">
