@@ -21,12 +21,14 @@ export interface Order {
 
 export async function saveOrder(order: Order): Promise<void> {
   const redis = getRedis()
-  await redis.lpush(ORDERS_KEY, JSON.stringify(order))
+  const raw = await redis.get<string>(ORDERS_KEY)
+  const orders: Order[] = raw ? JSON.parse(raw) : []
+  orders.unshift(order)
+  await redis.set(ORDERS_KEY, JSON.stringify(orders))
 }
 
 export async function getOrders(): Promise<Order[]> {
   const redis = getRedis()
-  const raw = await redis.lrange<string>(ORDERS_KEY, 0, -1)
-  if (!raw || raw.length === 0) return []
-  return raw.map((item) => JSON.parse(item))
+  const raw = await redis.get<string>(ORDERS_KEY)
+  return raw ? JSON.parse(raw) : []
 }
