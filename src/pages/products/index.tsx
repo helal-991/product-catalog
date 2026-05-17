@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { isAuthenticated } from '@/lib/auth'
+import { isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product } from '@/lib/types'
 import ProductCard from '@/components/ProductCard'
 
@@ -19,13 +19,19 @@ export default function ProductsPage() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.replace('/')
-    } else {
-      setAuthed(true)
-    }
+    isAuthenticated('catalog').then((ok) => {
+      if (!ok) {
+        router.replace('/')
+      } else {
+        setAuthed(true)
+        setChecking(false)
+        startInactivityTimer(() => router.replace('/'))
+      }
+    })
+    return () => stopInactivityTimer()
   }, [router])
 
   useEffect(() => {
@@ -48,60 +54,54 @@ export default function ProductsPage() {
     }
   }
 
-  const selectedBrand = brandSlug && brandSlug !== ''
-    ? (brandNames[String(brandSlug).toLowerCase()] || String(brandSlug))
-    : ''
+  const brandName = brandSlug
+    ? Object.entries(brandNames).find(([, v]) => v.toLowerCase().replace(/[^a-z0-9]+/g, '-') === brandSlug)?.[1] || decodeURIComponent(brandSlug as string)
+    : null
 
-  const companyFiltered = selectedBrand
-    ? products.filter((p) => p.company.toLowerCase() === selectedBrand.toLowerCase())
-    : products
+  const filtered = products
+    .filter((p) => !brandName || p.company.toLowerCase() === brandName.toLowerCase())
+    .filter((p) => !selectedCategory || p.category === selectedCategory)
+    .filter((p) => {
+      if (!search) return true
+      const q = search.toLowerCase()
+      return (
+        p.name.toLowerCase().includes(q) ||
+        (p.sku || '').toLowerCase().includes(q) ||
+        (p.category || '').toLowerCase().includes(q) ||
+        (p.description || '').toLowerCase().includes(q)
+      )
+    })
 
-  const categories = Array.from(new Set(companyFiltered.map((p) => p.category.trim()).filter(Boolean))).sort()
+  const categories = [...new Set(filtered.map((p) => p.category).filter(Boolean))] as string[]
 
-  const categoryFiltered = selectedCategory
-    ? companyFiltered.filter((p) => p.category.trim().toLowerCase() === selectedCategory.toLowerCase())
-    : companyFiltered
-
-  const q = search.trim().toLowerCase()
-  const searchFiltered = categoryFiltered.filter((p) => {
-    if (!q) return true
-    return (
-      p.name.toLowerCase().includes(q) ||
-      p.sku.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q)
-    )
-  })
-
-  if (!authed || dataLoading) {
+  if (checking) {
     return <div className="loading">Loading...</div>
   }
 
   return (
-    <div>
+    <div className="products-page">
       <div className="products-header">
-        <div className="products-header-top">
-          <a href="/brands" className="back-link">&larr; Change Brand</a>
-          <h1>{selectedBrand || 'All Products'}</h1>
-        </div>
-        <p>{searchFiltered.length} product{searchFiltered.length !== 1 ? 's' : ''}</p>
+        {brandName && (
+          <button onClick={() => router.back()} className="btn-outline" style={{ marginRight: 12 }}>
+            Back
+          </button>
+        )}
+        <h1 style={{ flex: 1 }}>{brandName ? brandName + ' Products' : 'All Products'}</h1>
         <input
+          className="search-input"
           type="text"
-          placeholder="Search by name, SKU, or category..."
-          className="search-bar"
+          placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          autoFocus
         />
       </div>
 
+      {/* Category filter */}
       {categories.length > 0 && (
-        <div className="category-filters">
+        <div className="category-filters" key={selectedCategory}>
           <button
             className={`category-chip ${!selectedCategory ? 'active' : ''}`}
-            onClick={() => {
-              setSelectedCategory('')
-              window.scrollTo(0, 0)
-            }}
+            onClick={() => setSelectedCategory('')}
           >
             All
           </button>
@@ -109,10 +109,7 @@ export default function ProductsPage() {
             <button
               key={cat}
               className={`category-chip ${selectedCategory === cat ? 'active' : ''}`}
-              onClick={() => {
-                setSelectedCategory(cat)
-                window.scrollTo(0, 0)
-              }}
+              onClick={() => setSelectedCategory(cat)}
             >
               {cat}
             </button>
@@ -122,14 +119,14 @@ export default function ProductsPage() {
 
       {error && <div className="error-msg">{error}</div>}
 
-      {searchFiltered.length === 0 ? (
-        <div className="empty-state">
-          {search ? 'No products match your search.' : 'No products found.'}
-        </div>
+      {dataLoading ? (
+        <div className="loading">Loading products...</div>
+      ) : filtered.length === 0 ? (
+        <div className="loading">No products found.</div>
       ) : (
-        <div className="products-grid" key={`${selectedCategory || 'all'}-${q}`}>
-          {searchFiltered.map((product) => (
-            <ProductCard key={product.sku} product={product} />
+        <div className="product-grid">
+          {filtered.map((p) => (
+            <ProductCard key={p.sku || p.name} product={p} />
           ))}
         </div>
       )}

@@ -1,13 +1,6 @@
 import React, { ReactNode, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import {
-  isAuthenticated,
-  logout,
-  isInvoiceAuthenticated,
-  invoiceLogout,
-  startInactivityTimer,
-  stopInactivityTimer,
-} from '@/lib/auth'
+import { isAuthenticated, logout, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 
 interface LayoutProps {
   children: ReactNode
@@ -16,28 +9,37 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const router = useRouter()
   const [authed, setAuthed] = useState(false)
-  const [invoiceAuthed, setInvoiceAuthed] = useState(false)
+  const [currentPage, setCurrentPage] = useState<string | null>(null)
 
   useEffect(() => {
-    setAuthed(isAuthenticated())
-    setInvoiceAuthed(isInvoiceAuthenticated())
-  }, [])
-
-  useEffect(() => {
-    if (authed || invoiceAuthed) {
-      startInactivityTimer(() => router.push('/'))
-      return () => stopInactivityTimer()
+    const path = router.pathname
+    let page = ''
+    if (path === '/') {
+      page = 'catalog'
+    } else if (path.startsWith('/invoice')) {
+      page = 'invoice'
+    } else if (path.startsWith('/dashboard')) {
+      page = 'dashboard'
+    } else if (path.startsWith('/brands') || path.startsWith('/products')) {
+      page = 'catalog'
+    } else {
+      return
     }
-  }, [authed, invoiceAuthed, router])
+    isAuthenticated(page).then((ok) => {
+      if (ok) {
+        setAuthed(true)
+        setCurrentPage(page)
+        startInactivityTimer(() => router.push('/'))
+      }
+    })
+    return () => stopInactivityTimer()
+  }, [router.pathname, router])
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    if (currentPage) {
+      await logout(currentPage)
+    }
     router.push('/')
-  }
-
-  const handleInvoiceLogout = () => {
-    invoiceLogout()
-    router.push('/invoice')
   }
 
   const showHeader = router.pathname !== '/' || authed
@@ -53,14 +55,7 @@ export default function Layout({ children }: LayoutProps) {
             </a>
             <div className="header-right">
               {authed && (
-                <>
-                  <button onClick={handleLogout} className="btn-outline btn-sm">
-                    Logout
-                  </button>
-                </>
-              )}
-              {invoiceAuthed && router.pathname === '/invoice' && (
-                <button onClick={handleInvoiceLogout} className="btn-outline btn-sm">
+                <button onClick={handleLogout} className="btn-outline btn-sm">
                   Logout
                 </button>
               )}

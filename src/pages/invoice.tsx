@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import {
-  isInvoiceAuthenticated,
-  invoiceLogin,
-  invoiceLogout,
-  checkInvoicePassword,
-} from '@/lib/auth'
+import { isAuthenticated, login as authLogin, logout as authLogout, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product } from '@/lib/types'
 import { generateInvoicePDF, downloadBlob, InvoiceItem } from '@/lib/invoice'
 
 export default function InvoicePage() {
   const [authed, setAuthed] = useState(false)
+  const [checking, setChecking] = useState(true)
   const [password, setPassword] = useState('')
   const [passwordError, setPasswordError] = useState('')
 
@@ -17,6 +13,8 @@ export default function InvoicePage() {
   const [companyLocation, setCompanyLocation] = useState('')
   const [paymentPlan, setPaymentPlan] = useState<'Cash' | 'Payments'>('Cash')
   const [paymentDates, setPaymentDates] = useState<string[]>(['', '', '', '', ''])
+  const [paymentAmounts, setPaymentAmounts] = useState<string[]>(['', '', '', '', ''])
+  const [pctValue, setPctValue] = useState('')
 
   const [products, setProducts] = useState<Product[]>([])
   const [brands, setBrands] = useState<string[]>([])
@@ -25,12 +23,20 @@ export default function InvoicePage() {
   const [items, setItems] = useState<InvoiceItem[]>([])
   const [generating, setGenerating] = useState(false)
   const [stockError, setStockError] = useState('')
+  const [orderStatus, setOrderStatus] = useState<{ ok: boolean; msg: string } | null>(null)
 
   const [pdfResult, setPdfResult] = useState<{ blob: Blob; filename: string } | null>(null)
 
   useEffect(() => {
-    setAuthed(isInvoiceAuthenticated())
-    fetchProducts()
+    isAuthenticated('invoice').then((ok) => {
+      setAuthed(ok)
+      setChecking(false)
+      if (ok) {
+        startInactivityTimer(() => location.reload())
+        fetchProducts()
+      }
+    })
+    return () => stopInactivityTimer()
   }, [])
 
   const fetchProducts = async () => {
@@ -48,12 +54,14 @@ export default function InvoicePage() {
     return p?.stock ?? 0
   }
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (checkInvoicePassword(password)) {
-      invoiceLogin()
+    const ok = await authLogin('invoice', password)
+    if (ok) {
       setAuthed(true)
       setPasswordError('')
+      startInactivityTimer(() => location.reload())
+      fetchProducts()
     } else {
       setPasswordError('Incorrect password')
     }
@@ -66,10 +74,13 @@ export default function InvoicePage() {
     setItems([])
     setPdfResult(null)
     setStockError('')
+    setOrderStatus(null)
+    setPaymentAmounts(['', '', '', '', ''])
+    setPctValue('')
   }
 
   const brandProducts = selectedBrand
-    ? products.filter((p) => p.company.toLowerCase() === selectedBrand.toLowerCase())
+    ? products.filter((p) => p.company.toLowerCase().trim() === selectedBrand.toLowerCase().trim())
     : []
 
   const handleAddItem = () => {
@@ -100,6 +111,7 @@ export default function InvoicePage() {
     setSelectedSku('')
     setPdfResult(null)
     setStockError('')
+    setOrderStatus(null)
   }
 
   const updateItemQty = (sku: string, qty: number) => {
@@ -126,47 +138,55 @@ export default function InvoicePage() {
   const handleCreateInvoice = async () => {
     setGenerating(true)
     setStockError('')
+    setOrderStatus(null)
     try {
       const deductItems = items.map((i) => ({ sku: i.sku, qty: i.qty }))
+      const useDates = paymentPlan === 'Payments' ? paymentDates.filter(Boolean) : []
+      const useAmounts = paymentPlan === 'Payments' ? paymentAmounts.map((v) => parseInt(v) || 0) : []
+      const orderPayload = {
+        id: `INV-${Date.now()}`,
+        date: new Date().toLocaleDateString('en-GB'),
+        supplier: selectedBrand,
+        companyName: companyName || '(not provided)',
+        items,
+        grandTotal,
+        paymentPlan,
+        paymentDates: useDates,
+        paymentAmounts: useAmounts,
+      }
       const deductRes = await fetch('/api/deduct-stock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: deductItems }),
+        body: JSON.stringify({ items: deductItems, order: orderPayload }),
       })
       const deductResult = await deductRes.json()
 
       if (!deductResult.success) {
-        setStockError(deductResult.errors.join('\n'))
+        setStockError((deductResult.errors || []).join('\n'))
         setGenerating(false)
         return
       }
 
-      const useDates = paymentPlan === 'Payments' ? paymentDates.filter(Boolean) : []
+      fetchProducts()
+
+      setOrderStatus({
+        ok: deductResult.orderSaved,
+        msg: deductResult.orderSaved
+          ? 'Order saved to history'
+          : 'Order could not be saved (stock deducted)',
+      })
+
       const result = generateInvoicePDF({
         companyName: companyName || '(not provided)',
         companyLocation: companyLocation || '(not provided)',
         paymentPlan,
         paymentDates: useDates,
+        paymentAmounts: useAmounts,
         supplier: selectedBrand,
         items,
         date: new Date().toLocaleDateString('en-GB'),
       })
       setPdfResult(result)
-
-      try {
-        await fetch('/api/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: `INV-${Date.now()}`,
-            date: new Date().toLocaleDateString('en-GB'),
-            supplier: selectedBrand,
-            companyName: companyName || '(not provided)',
-            items,
-            grandTotal,
-          }),
-        })
-      } catch {} // order save is non-critical
     } catch (e: any) {
       alert('Failed to create invoice: ' + (e.message || e))
     } finally {
@@ -196,6 +216,7 @@ export default function InvoicePage() {
 
   const handleBack = () => {
     setPdfResult(null)
+    setOrderStatus(null)
     fetchProducts()
   }
 
@@ -205,9 +226,32 @@ export default function InvoicePage() {
     setPaymentDates(updated)
   }
 
+  const handlePaymentAmountChange = (index: number, value: string) => {
+    const updated = [...paymentAmounts]
+    updated[index] = value
+    setPaymentAmounts(updated)
+  }
+
+  const totalPaid = paymentAmounts.reduce((s, v) => s + (parseInt(v) || 0), 0)
+  const remaining = grandTotal - totalPaid
+
+  const applyPercentage = () => {
+    const pct = parseFloat(pctValue)
+    if (isNaN(pct) || pct <= 0) return
+    const amt = Math.round(grandTotal * pct / 100)
+    const firstEmpty = paymentAmounts.findIndex((v) => !v)
+    if (firstEmpty !== -1) {
+      handlePaymentAmountChange(firstEmpty, String(amt))
+    }
+  }
+
   const handleLogout = () => {
-    invoiceLogout()
-    setAuthed(false)
+    stopInactivityTimer()
+    authLogout('invoice').then(() => setAuthed(false))
+  }
+
+  if (checking) {
+    return <div className="loading">Loading...</div>
   }
 
   if (!authed) {
@@ -275,15 +319,59 @@ export default function InvoicePage() {
               </div>
               {paymentPlan === 'Payments' && (
                 <div className="invoice-payment-dates">
-                  <label>Payment Dates</label>
+                  <label>Payment Schedule</label>
                   {paymentDates.map((date, i) => (
-                    <input
-                      key={i}
-                      type="date"
-                      value={date}
-                      onChange={(e) => handlePaymentDateChange(i, e.target.value)}
-                    />
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => handlePaymentDateChange(i, e.target.value)}
+                        style={{ flex: 1, minWidth: 0 }}
+                        placeholder="Date"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        value={paymentAmounts[i]}
+                        onChange={(e) => handlePaymentAmountChange(i, e.target.value)}
+                        style={{ width: 120 }}
+                        placeholder="Amount"
+                        disabled={!date}
+                      />
+                      {paymentAmounts[i] && (
+                        <span style={{ fontWeight: 600, minWidth: 60, textAlign: 'right', fontSize: '0.9rem' }}>
+                          EGP
+                        </span>
+                      )}
+                    </div>
                   ))}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '8px 12px', background: '#f8fafc', borderRadius: 8 }}>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>%</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={pctValue}
+                      onChange={(e) => setPctValue(e.target.value)}
+                      style={{ width: 60 }}
+                      placeholder="%"
+                    />
+                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>=</span>
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem', minWidth: 80 }}>
+                      {pctValue ? `${Math.round(grandTotal * (parseFloat(pctValue) || 0) / 100).toLocaleString('en-US')} EGP` : '—'}
+                    </span>
+                    <button onClick={applyPercentage} className="btn btn-sm btn-outline" style={{ padding: '4px 12px', fontSize: '0.8rem', width: 'auto' }}>
+                      Apply to next empty
+                    </button>
+                  </div>
+                  {paymentAmounts.some(Boolean) && (
+                    <div style={{ marginTop: 6, fontSize: '0.85rem', color: remaining === 0 ? '#16a34a' : '#dc2626', fontWeight: 600 }}>
+                      Total: {totalPaid.toLocaleString('en-US')} EGP
+                      {remaining !== 0 && (
+                        <span style={{ marginLeft: 12 }}>Remaining: {remaining.toLocaleString('en-US')} EGP</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -401,6 +489,21 @@ export default function InvoicePage() {
                   {stockError}
                 </div>
               )}
+              {orderStatus && (
+                <div
+                  className="error-msg"
+                  style={{
+                    marginTop: 12,
+                    color: orderStatus.ok ? '#16a34a' : '#dc2626',
+                    background: orderStatus.ok ? '#f0fdf4' : '#fef2f2',
+                    padding: '8px 16px',
+                    borderRadius: 8,
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  {orderStatus.msg}
+                </div>
+              )}
               <button
                 onClick={handleCreateInvoice}
                 disabled={generating}
@@ -416,6 +519,22 @@ export default function InvoicePage() {
         <section className="invoice-section invoice-done-section">
           <h2>Invoice Created</h2>
           <p className="invoice-done-text">Your invoice has been generated successfully.</p>
+          {orderStatus && (
+            <div
+              style={{
+                marginTop: 12,
+                marginBottom: 16,
+                color: orderStatus.ok ? '#16a34a' : '#dc2626',
+                background: orderStatus.ok ? '#f0fdf4' : '#fef2f2',
+                padding: '8px 16px',
+                borderRadius: 8,
+                fontSize: '0.9rem',
+                textAlign: 'center',
+              }}
+            >
+              {orderStatus.msg}
+            </div>
+          )}
           <div className="invoice-actions">
             <button onClick={handleShareWhatsApp} className="invoice-action-btn invoice-whatsapp-btn">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">

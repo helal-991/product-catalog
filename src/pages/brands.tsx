@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { isAuthenticated } from '@/lib/auth'
+import { isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product } from '@/lib/types'
 
 function brandSlug(name: string): string {
@@ -16,13 +16,19 @@ export default function BrandsPage() {
   const [authed, setAuthed] = useState(false)
   const [brands, setBrands] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.replace('/')
-    } else {
-      setAuthed(true)
-    }
+    isAuthenticated('catalog').then((ok) => {
+      if (!ok) {
+        router.replace('/')
+      } else {
+        setAuthed(true)
+        setChecking(false)
+        startInactivityTimer(() => router.replace('/'))
+      }
+    })
+    return () => stopInactivityTimer()
   }, [router])
 
   useEffect(() => {
@@ -35,53 +41,39 @@ export default function BrandsPage() {
       const res = await fetch('/api/products')
       const data: Product[] = await res.json()
       const unique = Array.from(new Set(data.map((p) => p.company).filter(Boolean)))
-      setBrands(unique.length ? unique : ['All Products'])
-    } catch {
-      setBrands(['All Products'])
-    } finally {
+      setBrands(unique.sort())
+    } catch {} finally {
       setLoading(false)
     }
   }
 
-  if (!authed || loading) {
+  if (checking) {
     return <div className="loading">Loading...</div>
   }
 
   return (
     <div className="brands-page">
-      <h1>Choose Brand</h1>
-      <p>Select a brand to view its products</p>
-      <div className="brands-grid">
-        {brands.map((brand) => {
-          const slug = brand === 'All Products' ? '' : brandSlug(brand)
-          const logoSrc = brandLogoPath(brand)
-          const initials = brand.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-          return (
-            <button
-              key={brand}
-              className="brand-card"
-              onClick={() => router.push(`/products?brand=${slug}`)}
-            >
-              <div className="brand-logo-wrap">
+      {loading ? (
+        <div className="loading">Loading brands...</div>
+      ) : (
+        <div className="brand-grid">
+          {brands.map((brand) => (
+            <a key={brand} href={`/products?brand=${brandSlug(brand)}`} className="brand-link">
+              <div className="brand-logo-card">
                 <img
-                  src={logoSrc}
+                  src={brandLogoPath(brand)}
                   alt={brand}
-                  className="brand-logo"
+                  className="brand-logo-img"
                   onError={(e) => {
-                    const el = e.currentTarget
-                    el.style.display = 'none'
-                    const next = el.nextElementSibling as HTMLElement
-                    if (next) next.style.display = 'flex'
+                    (e.target as HTMLImageElement).style.display = 'none'
                   }}
                 />
-                <div className="brand-logo-fallback" style={{ display: 'none' }}>
-                  {initials}
-                </div>
+                <h2>{brand}</h2>
               </div>
-            </button>
-          )
-        })}
-      </div>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

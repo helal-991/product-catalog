@@ -1,76 +1,74 @@
-const AUTH_KEY = 'pc_auth'
-const INVOICE_AUTH_KEY = 'pc_invoice_auth'
-const DASHBOARD_AUTH_KEY = 'pc_dashboard_auth'
 const INACTIVITY_MS = 60000
-
 let inactivityTimer: ReturnType<typeof setTimeout> | null = null
 let activityCleanup: (() => void) | null = null
 
-export function isAuthenticated(): boolean {
-  if (typeof window === 'undefined') return false
-  return localStorage.getItem(AUTH_KEY) === 'true'
+function getTokenKey(page: string): string {
+  return `auth_token_${page}`
 }
 
-export function login(): void {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(AUTH_KEY, 'true')
+function getStoredToken(page: string): string | null {
+  if (typeof window === 'undefined') return null
+  return sessionStorage.getItem(getTokenKey(page))
 }
 
-export function logout(): void {
-  if (typeof window === 'undefined') return
-  localStorage.removeItem(AUTH_KEY)
+function storeToken(page: string, token: string): void {
+  sessionStorage.setItem(getTokenKey(page), token)
 }
 
-export function checkPassword(password: string): boolean {
-  const correct = process.env.NEXT_PUBLIC_SITE_PASSWORD || ''
-  return password === correct
+function removeToken(page: string): void {
+  sessionStorage.removeItem(getTokenKey(page))
 }
 
-export function isInvoiceAuthenticated(): boolean {
-  if (typeof window === 'undefined') return false
-  return sessionStorage.getItem(INVOICE_AUTH_KEY) === 'true'
+export async function login(page: string, password: string): Promise<boolean> {
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', page, password }),
+    })
+    const data = await res.json()
+    if (data.token) {
+      storeToken(page, data.token)
+      return true
+    }
+    return false
+  } catch {
+    return false
+  }
 }
 
-export function invoiceLogin(): void {
-  if (typeof window === 'undefined') return
-  sessionStorage.setItem(INVOICE_AUTH_KEY, 'true')
+export async function isAuthenticated(page: string): Promise<boolean> {
+  const token = getStoredToken(page)
+  if (!token) return false
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', page, token }),
+    })
+    const data = await res.json()
+    return data.valid === true
+  } catch {
+    return false
+  }
 }
 
-export function invoiceLogout(): void {
-  if (typeof window === 'undefined') return
-  sessionStorage.removeItem(INVOICE_AUTH_KEY)
+export async function logout(page: string): Promise<void> {
+  const token = getStoredToken(page)
+  removeToken(page)
+  if (token) {
+    try {
+      await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout', token }),
+      })
+    } catch {}
+  }
 }
 
-export function checkInvoicePassword(password: string): boolean {
-  const correct = process.env.NEXT_PUBLIC_INVOICE_PASSWORD || ''
-  return password === correct
-}
-
-export function isDashboardAuthenticated(): boolean {
-  if (typeof window === 'undefined') return false
-  return sessionStorage.getItem(DASHBOARD_AUTH_KEY) === 'true'
-}
-
-export function dashboardLogin(): void {
-  if (typeof window === 'undefined') return
-  sessionStorage.setItem(DASHBOARD_AUTH_KEY, 'true')
-}
-
-export function dashboardLogout(): void {
-  if (typeof window === 'undefined') return
-  sessionStorage.removeItem(DASHBOARD_AUTH_KEY)
-}
-
-export function checkDashboardPassword(password: string): boolean {
-  const correct = process.env.NEXT_PUBLIC_DASHBOARD_PASSWORD || ''
-  return password === correct
-}
-
-export function clearAllAuth(): void {
-  if (typeof window === 'undefined') return
-  localStorage.removeItem(AUTH_KEY)
-  sessionStorage.removeItem(INVOICE_AUTH_KEY)
-  sessionStorage.removeItem(DASHBOARD_AUTH_KEY)
+function clearAllAuth(): void {
+  ;['catalog', 'invoice', 'dashboard'].forEach((p) => removeToken(p))
 }
 
 function resetInactivityTimer(redirect: () => void) {
@@ -86,12 +84,10 @@ function resetInactivityTimer(redirect: () => void) {
 export function startInactivityTimer(redirect: () => void): void {
   if (typeof window === 'undefined') return
   stopInactivityTimer()
-
   const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove']
   const handler = () => resetInactivityTimer(redirect)
   events.forEach((e) => window.addEventListener(e, handler, { passive: true }))
   activityCleanup = () => events.forEach((e) => window.removeEventListener(e, handler))
-
   resetInactivityTimer(redirect)
 }
 

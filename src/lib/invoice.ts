@@ -14,6 +14,7 @@ export interface InvoiceData {
   companyLocation: string
   paymentPlan: 'Cash' | 'Payments'
   paymentDates: string[]
+  paymentAmounts: number[]
   supplier: string
   items: InvoiceItem[]
   date: string
@@ -43,8 +44,9 @@ export function generateInvoicePDF(data: InvoiceData): { blob: Blob; filename: s
   if (data.paymentPlan === 'Payments' && data.paymentDates.length > 0) {
     doc.text('Payment Dates:', 14, y)
     y += 6
-    data.paymentDates.forEach((date) => {
-      doc.text(`  ${date}`, 14, y)
+    data.paymentDates.forEach((date, i) => {
+      const amt = data.paymentAmounts?.[i] || 0
+      doc.text(`  ${date}  —  ${amt.toLocaleString('en-US')} EGP`, 14, y)
       y += 6
     })
   }

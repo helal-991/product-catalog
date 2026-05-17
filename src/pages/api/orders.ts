@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { saveOrder, getOrders, Order } from '@/lib/orders'
+import { saveOrder, getOrders, deleteOrder, Order } from '@/lib/orders'
 
 export default async function handler(
   req: NextApiRequest,
@@ -26,6 +26,20 @@ export default async function handler(
     } catch (error: any) {
       console.error('Error saving order:', error)
       return res.status(500).json({ error: error.message || 'Failed to save order' })
+    }
+  }
+
+  if (req.method === 'DELETE') {
+    try {
+      const { orderId } = req.query
+      if (!orderId) {
+        return res.status(400).json({ error: 'Missing orderId' })
+      }
+      await deleteOrder(orderId as string)
+      return res.status(200).json({ success: true })
+    } catch (error: any) {
+      console.error('Error deleting order:', error)
+      return res.status(500).json({ error: error.message || 'Failed to delete order' })
     }
   }
 

@@ -1,12 +1,6 @@
 import React, { useState, useEffect, FormEvent } from 'react'
 import { useRouter } from 'next/router'
-import {
-  isAuthenticated,
-  login,
-  checkPassword,
-  invoiceLogin,
-  checkInvoicePassword,
-} from '@/lib/auth'
+import { login, isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,20 +10,26 @@ export default function LoginPage() {
   const [invoiceError, setInvoiceError] = useState('')
   const [catalogLoading, setCatalogLoading] = useState(false)
   const [invoiceLoading, setInvoiceLoading] = useState(false)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      router.replace('/brands')
-    }
+    isAuthenticated('catalog').then((authed) => {
+      if (authed) {
+        startInactivityTimer(() => router.replace('/'))
+        router.replace('/brands')
+      } else {
+        setChecking(false)
+      }
+    })
   }, [router])
 
   const handleCatalogSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setCatalogError('')
     setCatalogLoading(true)
-
-    if (checkPassword(catalogPassword)) {
-      login()
+    const ok = await login('catalog', catalogPassword)
+    if (ok) {
+      startInactivityTimer(() => router.replace('/'))
       router.replace('/brands')
     } else {
       setCatalogError('Incorrect password')
@@ -41,14 +41,18 @@ export default function LoginPage() {
     e.preventDefault()
     setInvoiceError('')
     setInvoiceLoading(true)
-
-    if (checkInvoicePassword(invoicePassword)) {
-      invoiceLogin()
+    const ok = await login('invoice', invoicePassword)
+    if (ok) {
+      startInactivityTimer(() => router.replace('/'))
       router.replace('/invoice')
     } else {
       setInvoiceError('Incorrect password')
       setInvoiceLoading(false)
     }
+  }
+
+  if (checking) {
+    return <div className="loading">Loading...</div>
   }
 
   return (

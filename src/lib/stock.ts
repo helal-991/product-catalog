@@ -49,7 +49,7 @@ export async function getEffectiveStockMap(
     const id = productId(p)
     const deducted = deductions[id] || 0
     if (manualOverrides[id] !== undefined) {
-      map[id] = effectiveStock(manualOverrides[id], deducted)
+      map[id] = manualOverrides[id]
     } else {
       map[id] = effectiveStock(p.stock, deducted)
     }
@@ -72,13 +72,20 @@ export async function checkStock(
       continue
     }
     const id = productId(product)
-    const deducted = deductions[id] || 0
-    const base = manualOverrides[id] !== undefined ? manualOverrides[id] : product.stock
-    const available = effectiveStock(base, deducted)
-    if (available < item.qty) {
-      errors.push(
-        `"${product.name}" — available: ${available}, requested: ${item.qty}`
-      )
+    if (manualOverrides[id] !== undefined) {
+      if (manualOverrides[id] < item.qty) {
+        errors.push(
+          `"${product.name}" — available: ${manualOverrides[id]}, requested: ${item.qty}`
+        )
+      }
+    } else {
+      const deducted = deductions[id] || 0
+      const available = effectiveStock(product.stock, deducted)
+      if (available < item.qty) {
+        errors.push(
+          `"${product.name}" — available: ${available}, requested: ${item.qty}`
+        )
+      }
     }
   }
 

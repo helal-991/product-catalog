@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { isAuthenticated } from '@/lib/auth'
+import { isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product, fmtPrice, brandClass } from '@/lib/types'
 import ImageGallery from '@/components/ImageGallery'
 
@@ -10,13 +10,19 @@ export default function ProductDetailPage() {
   const [authed, setAuthed] = useState(false)
   const [product, setProduct] = useState<Product | null>(null)
   const [error, setError] = useState('')
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.replace('/')
-    } else {
-      setAuthed(true)
-    }
+    isAuthenticated('catalog').then((ok) => {
+      if (!ok) {
+        router.replace('/')
+      } else {
+        setAuthed(true)
+        setChecking(false)
+        startInactivityTimer(() => router.replace('/'))
+      }
+    })
+    return () => stopInactivityTimer()
   }, [router])
 
   useEffect(() => {
@@ -41,6 +47,10 @@ export default function ProductDetailPage() {
     }
   }
 
+  if (checking) {
+    return <div className="loading">Loading...</div>
+  }
+
   if (!authed) {
     return <div className="loading">Loading...</div>
   }
@@ -48,46 +58,46 @@ export default function ProductDetailPage() {
   if (error || !product) {
     return (
       <div>
-        <div className="product-detail-back">
-          <button onClick={() => router.back()} className="back-btn">&larr; Back to products</button>
+        <div className="error-msg" style={{ margin: 32 }}>{error || 'Product not found'}</div>
+        <div style={{ textAlign: 'center' }}>
+          <button onClick={() => router.back()} className="btn-outline">Go Back</button>
         </div>
-        <div className="empty-state">{error || 'Product not found'}</div>
       </div>
     )
   }
 
+  const bgClass = brandClass(product.company)
+  const backPath = product.company
+    ? `/products?brand=${product.company.toLowerCase().replace(/\s+/g, '-')}`
+    : '/products'
+
   return (
-    <div className="product-detail">
-      <div className="product-detail-back">
-        <button onClick={() => router.back()} className="back-btn">&larr; Back to products</button>
-      </div>
-
-      <ImageGallery images={product.imageUrls} productName={product.name} />
-
-      <div className="product-detail-info">
-        <span className="product-detail-category">{product.category}</span>
-        {product.company && (
-          <span className="product-detail-company">{product.company}</span>
-        )}
-        <h1>{product.name}</h1>
-        <div className={`product-detail-prices ${brandClass(product.company)}`}>
-          <div className="price-box">
-            <span className="price-box-label">RRP</span>
-            <strong className="price-box-value">{fmtPrice(product.rrp)} EGP</strong>
+    <div className={`product-detail-page ${bgClass}`}>
+      <button onClick={() => router.back()} className="btn-outline" style={{ marginBottom: 16 }}>
+        Back
+      </button>
+      <div className="product-detail">
+        <ImageGallery
+          images={product.imageUrls}
+          productName={product.name}
+        />
+        <div className="product-detail-info">
+          <h1>{product.name}</h1>
+          {product.sku && <p className="product-detail-sku">SKU: {product.sku}</p>}
+          {product.category && <p className="product-detail-category">{product.category}</p>}
+          {product.description && (
+            <p className="product-detail-desc">{product.description}</p>
+          )}
+          <div className="price-boxes">
+            <div className="price-box">
+              <span className="price-label">RRP</span>
+              <span className="price-value">{fmtPrice(product.rrp)} EGP</span>
+            </div>
+            <div className="price-box">
+              <span className="price-label">RDP</span>
+              <span className="price-value">{fmtPrice(product.rdp)} EGP</span>
+            </div>
           </div>
-          <div className="price-box">
-            <span className="price-box-label">RDP</span>
-            <strong className="price-box-value">{fmtPrice(product.rdp)} EGP</strong>
-          </div>
-        </div>
-        <p className="product-detail-description">{product.description}</p>
-        <div className="product-detail-meta">
-          <span>
-            <strong>SKU</strong> <span>{product.sku}</span>
-          </span>
-          <span>
-            <strong>Barcode</strong> <span>{product.barcode}</span>
-          </span>
         </div>
       </div>
     </div>
