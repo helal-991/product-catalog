@@ -73,7 +73,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className={`product-detail-page ${bgClass}`}>
-      <button onClick={() => router.back()} className="btn-outline" style={{ marginBottom: 16 }}>
+      <button onClick={() => router.back()} className="btn-outline" style={{ marginBottom: 16, fontSize: '1.5rem', padding: '12px 24px' }}>
         Back
       </button>
       <div className="product-detail">
