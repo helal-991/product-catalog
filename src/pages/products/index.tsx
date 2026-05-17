@@ -72,7 +72,7 @@ export default function ProductsPage() {
       )
     })
 
-  const categories = [...new Set(filtered.map((p) => p.category).filter(Boolean))] as string[]
+  const categories = [...new Set(products.map((p) => p.category).filter(Boolean))] as string[]
 
   if (checking) {
     return <div className="loading">Loading...</div>
@@ -98,7 +98,7 @@ export default function ProductsPage() {
 
       {/* Category filter */}
       {categories.length > 0 && (
-        <div className="category-filters" key={selectedCategory}>
+        <div className="category-filters">
           <button
             className={`category-chip ${!selectedCategory ? 'active' : ''}`}
             onClick={() => setSelectedCategory('')}
