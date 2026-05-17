@@ -72,7 +72,10 @@ export default function ProductsPage() {
       )
     })
 
-  const categories = [...new Set(products.map((p) => p.category).filter(Boolean))] as string[]
+  const brandProducts = brandName
+    ? products.filter((p) => p.company.toLowerCase() === brandName.toLowerCase())
+    : products
+  const categories = [...new Set(brandProducts.map((p) => p.category).filter(Boolean))] as string[]
 
   if (checking) {
     return <div className="loading">Loading...</div>

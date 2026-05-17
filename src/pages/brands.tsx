@@ -68,7 +68,6 @@ export default function BrandsPage() {
                     (e.target as HTMLImageElement).style.display = 'none'
                   }}
                 />
-                <h2>{brand}</h2>
               </div>
             </a>
           ))}
