@@ -13,7 +13,7 @@ export default function ProductDetailPage() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    isAuthenticated('catalog').then((ok) => {
+    isAuthenticated().then((ok) => {
       if (!ok) {
         router.replace('/')
       } else {

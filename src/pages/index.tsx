@@ -4,16 +4,13 @@ import { login, isAuthenticated, startInactivityTimer, stopInactivityTimer } fro
 
 export default function LoginPage() {
   const router = useRouter()
-  const [catalogPassword, setCatalogPassword] = useState('')
-  const [invoicePassword, setInvoicePassword] = useState('')
-  const [catalogError, setCatalogError] = useState('')
-  const [invoiceError, setInvoiceError] = useState('')
-  const [catalogLoading, setCatalogLoading] = useState(false)
-  const [invoiceLoading, setInvoiceLoading] = useState(false)
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    isAuthenticated('catalog').then((authed) => {
+    isAuthenticated().then((authed) => {
       if (authed) {
         startInactivityTimer(() => router.replace('/'))
         router.replace('/brands')
@@ -23,31 +20,17 @@ export default function LoginPage() {
     })
   }, [router])
 
-  const handleCatalogSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setCatalogError('')
-    setCatalogLoading(true)
-    const ok = await login('catalog', catalogPassword)
+    setError('')
+    setLoading(true)
+    const ok = await login(password)
     if (ok) {
       startInactivityTimer(() => router.replace('/'))
       router.replace('/brands')
     } else {
-      setCatalogError('Incorrect password')
-      setCatalogLoading(false)
-    }
-  }
-
-  const handleInvoiceSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setInvoiceError('')
-    setInvoiceLoading(true)
-    const ok = await login('invoice', invoicePassword)
-    if (ok) {
-      startInactivityTimer(() => router.replace('/'))
-      router.replace('/invoice')
-    } else {
-      setInvoiceError('Incorrect password')
-      setInvoiceLoading(false)
+      setError('Incorrect password')
+      setLoading(false)
     }
   }
 
@@ -69,52 +52,25 @@ export default function LoginPage() {
           <h1>Product Catalog</h1>
           <p>Browse products by brand</p>
 
-          {catalogError && <div className="error-msg">{catalogError}</div>}
+          {error && <div className="error-msg">{error}</div>}
 
-          <form onSubmit={handleCatalogSubmit} className="login-form">
+          <form onSubmit={handleSubmit} className="login-form">
             <div className="input-group">
               <label>Password</label>
               <input
                 type="password"
                 placeholder="Enter catalog password"
-                value={catalogPassword}
-                onChange={(e) => setCatalogPassword(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
-            <button type="submit" className="btn btn-primary" disabled={catalogLoading}>
-              {catalogLoading ? 'Checking...' : 'Access Catalog'}
-            </button>
-          </form>
-        </div>
-
-        <div className="login-card">
-          <h1>Invoice Creator</h1>
-          <p>Generate and download invoices</p>
-
-          {invoiceError && <div className="error-msg">{invoiceError}</div>}
-
-          <form onSubmit={handleInvoiceSubmit} className="login-form">
-            <div className="input-group">
-              <label>Password</label>
-              <input
-                type="password"
-                placeholder="Enter invoice password"
-                value={invoicePassword}
-                onChange={(e) => setInvoicePassword(e.target.value)}
-                required
-              />
-            </div>
-            <button type="submit" className="btn btn-primary" disabled={invoiceLoading}>
-              {invoiceLoading ? 'Checking...' : 'Access Invoice'}
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? 'Checking...' : 'Access Catalog'}
             </button>
           </form>
         </div>
       </div>
-
-      <a href="/dashboard" className="dashboard-home-btn">
-        Dashboard
-      </a>
     </div>
   )
 }

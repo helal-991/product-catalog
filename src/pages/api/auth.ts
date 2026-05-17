@@ -8,31 +8,24 @@ function getRedis(): Redis {
   })
 }
 
-const PAGE_PASSWORDS: Record<string, string | undefined> = {
-  catalog: process.env.SITE_PASSWORD,
-  invoice: process.env.INVOICE_PASSWORD,
-  dashboard: process.env.DASHBOARD_PASSWORD,
+function checkPassword(password: string): boolean {
+  return !!process.env.SITE_PASSWORD && password === process.env.SITE_PASSWORD
 }
 
-function checkPassword(page: string, password: string): boolean {
-  const correct = PAGE_PASSWORDS[page]
-  return !!correct && password === correct
-}
-
-async function createSession(page: string): Promise<string> {
+async function createSession(): Promise<string> {
   const { randomBytes } = await import('crypto')
   const token = randomBytes(32).toString('hex')
   const redis = getRedis()
-  await redis.set(`session:${token}`, page, { ex: 3600 })
+  await redis.set(`session:${token}`, 'catalog', { ex: 3600 })
   return token
 }
 
-async function validateSession(page: string, token: string): Promise<boolean> {
+async function validateSession(token: string): Promise<boolean> {
   if (!token) return false
   try {
     const redis = getRedis()
     const stored = await redis.get<string>(`session:${token}`)
-    return stored === page
+    return stored === 'catalog'
   } catch {
     return false
   }
@@ -53,27 +46,24 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { action, page, password, token } = req.body
+  const { action, password, token } = req.body
 
   if (action === 'login') {
-    if (!page || !password) {
-      return res.status(400).json({ error: 'Page and password required' })
+    if (!password) {
+      return res.status(400).json({ error: 'Password required' })
     }
-    if (!['catalog', 'invoice', 'dashboard'].includes(page)) {
-      return res.status(400).json({ error: 'Invalid page' })
-    }
-    if (!checkPassword(page, password)) {
+    if (!checkPassword(password)) {
       return res.status(401).json({ error: 'Invalid password' })
     }
-    const sessionToken = await createSession(page)
+    const sessionToken = await createSession()
     return res.status(200).json({ token: sessionToken })
   }
 
   if (action === 'verify') {
-    if (!page || !token) {
+    if (!token) {
       return res.json({ valid: false })
     }
-    const valid = await validateSession(page, token)
+    const valid = await validateSession(token)
     return res.json({ valid })
   }
 

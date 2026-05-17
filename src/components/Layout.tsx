@@ -9,36 +9,22 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const router = useRouter()
   const [authed, setAuthed] = useState(false)
-  const [currentPage, setCurrentPage] = useState<string | null>(null)
 
   useEffect(() => {
     const path = router.pathname
-    let page = ''
-    if (path === '/') {
-      page = 'catalog'
-    } else if (path.startsWith('/invoice')) {
-      page = 'invoice'
-    } else if (path.startsWith('/dashboard')) {
-      page = 'dashboard'
-    } else if (path.startsWith('/brands') || path.startsWith('/products')) {
-      page = 'catalog'
-    } else {
-      return
+    if (path === '/' || path === '/brands' || path === '/products' || path.startsWith('/products/')) {
+      isAuthenticated().then((ok) => {
+        if (ok) {
+          setAuthed(true)
+          startInactivityTimer(() => router.push('/'))
+        }
+      })
     }
-    isAuthenticated(page).then((ok) => {
-      if (ok) {
-        setAuthed(true)
-        setCurrentPage(page)
-        startInactivityTimer(() => router.push('/'))
-      }
-    })
     return () => stopInactivityTimer()
   }, [router.pathname, router])
 
   const handleLogout = async () => {
-    if (currentPage) {
-      await logout(currentPage)
-    }
+    await logout()
     router.push('/')
   }
 

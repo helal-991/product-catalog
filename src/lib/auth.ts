@@ -2,33 +2,29 @@ const INACTIVITY_MS = 60000
 let inactivityTimer: ReturnType<typeof setTimeout> | null = null
 let activityCleanup: (() => void) | null = null
 
-function getTokenKey(page: string): string {
-  return `auth_token_${page}`
-}
-
-function getStoredToken(page: string): string | null {
+function getStoredToken(): string | null {
   if (typeof window === 'undefined') return null
-  return sessionStorage.getItem(getTokenKey(page))
+  return sessionStorage.getItem('auth_token')
 }
 
-function storeToken(page: string, token: string): void {
-  sessionStorage.setItem(getTokenKey(page), token)
+function storeToken(token: string): void {
+  sessionStorage.setItem('auth_token', token)
 }
 
-function removeToken(page: string): void {
-  sessionStorage.removeItem(getTokenKey(page))
+function removeToken(): void {
+  sessionStorage.removeItem('auth_token')
 }
 
-export async function login(page: string, password: string): Promise<boolean> {
+export async function login(password: string): Promise<boolean> {
   try {
     const res = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'login', page, password }),
+      body: JSON.stringify({ action: 'login', password }),
     })
     const data = await res.json()
     if (data.token) {
-      storeToken(page, data.token)
+      storeToken(data.token)
       return true
     }
     return false
@@ -37,14 +33,14 @@ export async function login(page: string, password: string): Promise<boolean> {
   }
 }
 
-export async function isAuthenticated(page: string): Promise<boolean> {
-  const token = getStoredToken(page)
+export async function isAuthenticated(): Promise<boolean> {
+  const token = getStoredToken()
   if (!token) return false
   try {
     const res = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'verify', page, token }),
+      body: JSON.stringify({ action: 'verify', token }),
     })
     const data = await res.json()
     return data.valid === true
@@ -53,9 +49,9 @@ export async function isAuthenticated(page: string): Promise<boolean> {
   }
 }
 
-export async function logout(page: string): Promise<void> {
-  const token = getStoredToken(page)
-  removeToken(page)
+export async function logout(): Promise<void> {
+  const token = getStoredToken()
+  removeToken()
   if (token) {
     try {
       await fetch('/api/auth', {
@@ -67,14 +63,10 @@ export async function logout(page: string): Promise<void> {
   }
 }
 
-function clearAllAuth(): void {
-  ;['catalog', 'invoice', 'dashboard'].forEach((p) => removeToken(p))
-}
-
 function resetInactivityTimer(redirect: () => void) {
   if (inactivityTimer) clearTimeout(inactivityTimer)
   inactivityTimer = setTimeout(() => {
-    clearAllAuth()
+    removeToken()
     activityCleanup?.()
     activityCleanup = null
     redirect()
