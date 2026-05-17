@@ -296,10 +296,10 @@ img {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.products-grid {
+.product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
 
 .product-card {
@@ -327,14 +327,15 @@ img {
 .product-card-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 8px;
 }
 
 .product-card-body {
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   flex: 1;
 }
 
@@ -579,11 +580,11 @@ img {
   margin-bottom: 48px;
 }
 
-.brands-grid {
+.brand-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 32px;
-  max-width: 900px;
+  max-width: 600px;
   margin: 0 auto;
 }
 
@@ -1019,9 +1020,9 @@ img {
     gap: 24px;
   }
 
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 16px;
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .product-prices {
@@ -1053,26 +1054,10 @@ img {
     font-size: 1.2rem;
   }
 
-  .brands-grid {
+  .brand-grid {
     grid-template-columns: 1fr;
     gap: 24px;
-  }
-
-  .brand-card {
-    padding: 24px;
-  }
-
-  .brand-logo-wrap {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1;
-    max-width: 400px;
-  }
-
-  .brand-logo-fallback {
-    width: 100%;
-    height: 100%;
-    font-size: 4rem;
+    max-width: 300px;
   }
 
   .login-card {
