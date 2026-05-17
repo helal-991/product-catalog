@@ -54,57 +54,68 @@ export default function ProductsPage() {
     }
   }
 
-  const brandName = brandSlug
-    ? Object.entries(brandNames).find(([, v]) => v.toLowerCase().replace(/[^a-z0-9]+/g, '-') === brandSlug)?.[1] || decodeURIComponent(brandSlug as string)
-    : null
+  const selectedBrand = brandSlug && brandSlug !== ''
+    ? (brandNames[String(brandSlug).toLowerCase()] || String(brandSlug))
+    : ''
 
-  const filtered = products
-    .filter((p) => !brandName || p.company.toLowerCase() === brandName.toLowerCase())
-    .filter((p) => !selectedCategory || p.category === selectedCategory)
-    .filter((p) => {
-      if (!search) return true
-      const q = search.toLowerCase()
-      return (
-        p.name.toLowerCase().includes(q) ||
-        (p.sku || '').toLowerCase().includes(q) ||
-        (p.category || '').toLowerCase().includes(q) ||
-        (p.description || '').toLowerCase().includes(q)
-      )
-    })
-
-  const brandProducts = brandName
-    ? products.filter((p) => p.company.toLowerCase() === brandName.toLowerCase())
+  const companyFiltered = selectedBrand
+    ? products.filter((p) => p.company.toLowerCase() === selectedBrand.toLowerCase())
     : products
-  const categories = [...new Set(brandProducts.map((p) => p.category).filter(Boolean))] as string[]
+
+  const categories = Array.from(new Set(companyFiltered.map((p) => p.category.trim()).filter(Boolean))).sort()
+
+  const categoryFiltered = selectedCategory
+    ? companyFiltered.filter((p) => p.category.trim().toLowerCase() === selectedCategory.toLowerCase())
+    : companyFiltered
+
+  const q = search.trim().toLowerCase()
+  const searchFiltered = categoryFiltered.filter((p) => {
+    if (!q) return true
+    return (
+      p.name.toLowerCase().includes(q) ||
+      p.sku.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q)
+    )
+  })
 
   if (checking) {
     return <div className="loading">Loading...</div>
   }
 
+  if (!authed) {
+    return <div className="loading">Loading...</div>
+  }
+
+  if (dataLoading) {
+    return <div className="loading">Loading products...</div>
+  }
+
   return (
-    <div className="products-page">
+    <div>
       <div className="products-header">
-        {brandName && (
-          <button onClick={() => router.back()} className="btn-outline" style={{ marginRight: 12 }}>
-            Back
-          </button>
-        )}
-        <h1 style={{ flex: 1 }}>{brandName ? brandName + ' Products' : 'All Products'}</h1>
+        <div className="products-header-top">
+          <a href="/brands" className="back-link">&larr; Change Brand</a>
+          <h1>{selectedBrand || 'All Products'}</h1>
+        </div>
+        <p>{searchFiltered.length} product{searchFiltered.length !== 1 ? 's' : ''}</p>
         <input
-          className="search-input"
           type="text"
-          placeholder="Search products..."
+          placeholder="Search by name, SKU, or category..."
+          className="search-bar"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          autoFocus
         />
       </div>
 
-      {/* Category filter */}
       {categories.length > 0 && (
         <div className="category-filters">
           <button
             className={`category-chip ${!selectedCategory ? 'active' : ''}`}
-            onClick={() => setSelectedCategory('')}
+            onClick={() => {
+              setSelectedCategory('')
+              window.scrollTo(0, 0)
+            }}
           >
             All
           </button>
@@ -112,7 +123,10 @@ export default function ProductsPage() {
             <button
               key={cat}
               className={`category-chip ${selectedCategory === cat ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => {
+                setSelectedCategory(cat)
+                window.scrollTo(0, 0)
+              }}
             >
               {cat}
             </button>
@@ -122,14 +136,14 @@ export default function ProductsPage() {
 
       {error && <div className="error-msg">{error}</div>}
 
-      {dataLoading ? (
-        <div className="loading">Loading products...</div>
-      ) : filtered.length === 0 ? (
-        <div className="loading">No products found.</div>
+      {searchFiltered.length === 0 ? (
+        <div className="empty-state">
+          {search ? 'No products match your search.' : 'No products found.'}
+        </div>
       ) : (
-        <div className="product-grid">
-          {filtered.map((p) => (
-            <ProductCard key={p.sku || p.name} product={p} />
+        <div className="products-grid">
+          {searchFiltered.map((product) => (
+            <ProductCard key={product.sku || product.name} product={product} />
           ))}
         </div>
       )}

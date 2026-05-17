@@ -296,7 +296,7 @@ img {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.product-grid {
+.products-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
@@ -1020,7 +1020,7 @@ img {
     gap: 24px;
   }
 
-  .product-grid {
+  .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
