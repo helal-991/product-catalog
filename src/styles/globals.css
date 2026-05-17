@@ -23,6 +23,7 @@ body {
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 a {
@@ -372,6 +373,10 @@ img {
   gap: 8px;
 }
 
+.product-detail-page {
+  overflow-x: hidden;
+}
+
 /* Product Detail Page */
 .product-detail {
   display: grid;
@@ -426,6 +431,11 @@ img {
 }
 
 .product-detail-prices {
+  display: flex;
+  gap: 16px;
+}
+
+.price-boxes {
   display: flex;
   gap: 16px;
 }

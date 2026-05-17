@@ -141,7 +141,7 @@ export default function ProductsPage() {
           {search ? 'No products match your search.' : 'No products found.'}
         </div>
       ) : (
-        <div className="products-grid">
+        <div className="products-grid" key={`${selectedCategory || 'all'}-${q}`}>
           {searchFiltered.map((product) => (
             <ProductCard key={product.sku || product.name} product={product} />
           ))}
