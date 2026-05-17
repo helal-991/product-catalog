@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import { useTranslation } from '@/lib/i18n'
 import { isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product } from '@/lib/types'
 import ProductCard from '@/components/ProductCard'
@@ -12,6 +13,7 @@ const brandNames: Record<string, string> = {
 export default function ProductsPage() {
   const router = useRouter()
   const { brand: brandSlug } = router.query
+  const { t, lang, getText, translateProductData } = useTranslation()
 
   const [authed, setAuthed] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
@@ -44,15 +46,20 @@ export default function ProductsPage() {
     setError('')
     try {
       const res = await fetch('/api/products')
-      if (!res.ok) throw new Error('Failed to load products')
+      if (!res.ok) throw new Error(t('Failed to load products'))
       const data = await res.json()
       setProducts(data)
     } catch (err: any) {
-      setError(err.message || 'Failed to load products')
+      setError(err.message || t('Failed to load products'))
     } finally {
       setDataLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (!products.length || lang !== 'ar') return
+    translateProductData(products)
+  }, [products, lang])
 
   const selectedBrand = brandSlug && brandSlug !== ''
     ? (brandNames[String(brandSlug).toLowerCase()] || String(brandSlug))
@@ -79,28 +86,28 @@ export default function ProductsPage() {
   })
 
   if (checking) {
-    return <div className="loading">Loading...</div>
+    return <div className="loading">{t('Loading...')}</div>
   }
 
   if (!authed) {
-    return <div className="loading">Loading...</div>
+    return <div className="loading">{t('Loading...')}</div>
   }
 
   if (dataLoading) {
-    return <div className="loading">Loading products...</div>
+    return <div className="loading">{t('Loading products...')}</div>
   }
 
   return (
     <div>
       <div className="products-header">
         <div className="products-header-top">
-          <a href="/brands" className="back-link">&larr; Change Brand</a>
-          <h1>{selectedBrand || 'All Products'}</h1>
+          <a href="/brands" className="back-link">&larr; {t('Change Brand')}</a>
+          <h1>{selectedBrand || t('All Products')}</h1>
         </div>
-        <p>{searchFiltered.length} product{searchFiltered.length !== 1 ? 's' : ''}</p>
+        <p>{searchFiltered.length} {searchFiltered.length !== 1 ? t('products') : t('product')}</p>
         <input
           type="text"
-          placeholder="Search by name, SKU, or category..."
+          placeholder={t('Search by name, SKU, or category...')}
           className="search-bar"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -117,7 +124,7 @@ export default function ProductsPage() {
               window.scrollTo(0, 0)
             }}
           >
-            All
+            {t('All')}
           </button>
           {categories.map((cat) => (
             <button
@@ -138,7 +145,7 @@ export default function ProductsPage() {
 
       {searchFiltered.length === 0 ? (
         <div className="empty-state">
-          {search ? 'No products match your search.' : 'No products found.'}
+          {search ? t('No products match your search.') : t('No products found.')}
         </div>
       ) : (
         <div className="products-grid" key={`${selectedCategory || 'all'}-${q}`}>

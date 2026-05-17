@@ -1,9 +1,11 @@
 import React, { useState, useEffect, FormEvent } from 'react'
 import { useRouter } from 'next/router'
+import { useLanguage } from '@/lib/i18n'
 import { login, isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { t } = useLanguage()
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -29,13 +31,13 @@ export default function LoginPage() {
       startInactivityTimer(() => router.replace('/'))
       router.replace('/brands')
     } else {
-      setError('Incorrect password')
+      setError(t('Incorrect password'))
       setLoading(false)
     }
   }
 
   if (checking) {
-    return <div className="loading">Loading...</div>
+    return <div className="loading">{t('Loading...')}</div>
   }
 
   return (
@@ -49,24 +51,24 @@ export default function LoginPage() {
       </div>
       <div className="login-cards">
         <div className="login-card">
-          <h1>Product Catalog</h1>
-          <p>Browse products by brand</p>
+          <h1>{t('Product Catalog')}</h1>
+          <p>{t('Browse products by brand')}</p>
 
           {error && <div className="error-msg">{error}</div>}
 
           <form onSubmit={handleSubmit} className="login-form">
             <div className="input-group">
-              <label>Password</label>
+              <label>{t('Password')}</label>
               <input
                 type="password"
-                placeholder="Enter catalog password"
+                placeholder={t('Enter catalog password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Checking...' : 'Access Catalog'}
+              {loading ? t('Checking...') : t('Access Catalog')}
             </button>
           </form>
         </div>

@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Product, fmtPrice, brandColor } from '@/lib/types'
+import { useLanguage } from '@/lib/i18n'
 
 interface ProductCardProps {
   product: Product
@@ -12,18 +13,22 @@ function brandClass(company: string): string {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { lang, getText } = useLanguage()
   const thumbnail = product.imageUrls[0] || '/placeholder.svg'
   const productId = product.sku || product.name
   const cardClass = `product-card ${brandClass(product.company)}`
 
+  const name = getText(product.name, lang)
+  const category = product.category ? getText(product.category, lang) : ''
+
   const content = (
     <>
       <div className="product-card-image">
-        <img src={thumbnail} alt={product.name} loading="lazy" />
+        <img src={thumbnail} alt={name} loading="lazy" />
       </div>
       <div className="product-card-body">
-        <span className="product-category">{product.category}</span>
-        <h3 className="product-name">{product.name}</h3>
+        {category && <span className="product-category">{category}</span>}
+        <h3 className="product-name">{name}</h3>
         <div className="product-meta">
           <span className="product-sku">SKU {product.sku}</span>
           <div className="product-prices">

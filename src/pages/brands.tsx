@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import { useLanguage } from '@/lib/i18n'
 import { isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product } from '@/lib/types'
 
@@ -13,6 +14,7 @@ function brandLogoPath(name: string): string {
 
 export default function BrandsPage() {
   const router = useRouter()
+  const { t } = useLanguage()
   const [authed, setAuthed] = useState(false)
   const [brands, setBrands] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,13 +50,13 @@ export default function BrandsPage() {
   }
 
   if (checking) {
-    return <div className="loading">Loading...</div>
+    return <div className="loading">{t('Loading...')}</div>
   }
 
   return (
     <div className="brands-page">
       {loading ? (
-        <div className="loading">Loading brands...</div>
+        <div className="loading">{t('Loading brands...')}</div>
       ) : (
         <div className="brand-grid">
           {brands.map((brand) => (
