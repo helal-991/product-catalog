@@ -9,6 +9,9 @@ export interface Product {
   category: string
   company: string
   stock: number
+  nameAr?: string
+  descriptionAr?: string
+  categoryAr?: string
 }
 
 export function fmtPrice(price: number): string {

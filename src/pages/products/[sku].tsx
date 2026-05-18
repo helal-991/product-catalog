@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { useTranslation } from '@/lib/i18n'
+import { useLanguage } from '@/lib/i18n'
 import { isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product, fmtPrice, brandClass } from '@/lib/types'
 import ImageGallery from '@/components/ImageGallery'
@@ -8,7 +8,7 @@ import ImageGallery from '@/components/ImageGallery'
 export default function ProductDetailPage() {
   const router = useRouter()
   const { sku } = router.query
-  const { t, lang, getText, translateProductData } = useTranslation()
+  const { t, lang } = useLanguage()
   const [authed, setAuthed] = useState(false)
   const [product, setProduct] = useState<Product | null>(null)
   const [error, setError] = useState('')
@@ -31,11 +31,6 @@ export default function ProductDetailPage() {
     if (!authed || !sku) return
     fetchProduct()
   }, [authed, sku])
-
-  useEffect(() => {
-    if (!product || lang !== 'ar') return
-    translateProductData([product])
-  }, [product, lang])
 
   const fetchProduct = async () => {
     setError('')
@@ -74,9 +69,13 @@ export default function ProductDetailPage() {
   }
 
   const bgClass = brandClass(product.company)
-  const name = getText(product.name, lang)
-  const description = product.description ? getText(product.description, lang) : ''
-  const category = product.category ? getText(product.category, lang) : ''
+  const name = lang === 'ar' && product.nameAr ? product.nameAr : product.name
+  const description = product.description
+    ? (lang === 'ar' && product.descriptionAr ? product.descriptionAr : product.description)
+    : ''
+  const category = product.category
+    ? (lang === 'ar' && product.categoryAr ? product.categoryAr : product.category)
+    : ''
 
   return (
     <div className={`product-detail-page ${bgClass}`}>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { useTranslation } from '@/lib/i18n'
+import { useLanguage } from '@/lib/i18n'
 import { isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product } from '@/lib/types'
 import ProductCard from '@/components/ProductCard'
@@ -13,7 +13,7 @@ const brandNames: Record<string, string> = {
 export default function ProductsPage() {
   const router = useRouter()
   const { brand: brandSlug } = router.query
-  const { t, lang, getText, translateProductData } = useTranslation()
+  const { t } = useLanguage()
 
   const [authed, setAuthed] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
@@ -55,11 +55,6 @@ export default function ProductsPage() {
       setDataLoading(false)
     }
   }
-
-  useEffect(() => {
-    if (!products.length || lang !== 'ar') return
-    translateProductData(products)
-  }, [products, lang])
 
   const selectedBrand = brandSlug && brandSlug !== ''
     ? (brandNames[String(brandSlug).toLowerCase()] || String(brandSlug))

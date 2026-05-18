@@ -13,13 +13,13 @@ function brandClass(company: string): string {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { lang, getText } = useLanguage()
+  const { lang } = useLanguage()
   const thumbnail = product.imageUrls[0] || '/placeholder.svg'
   const productId = product.sku || product.name
   const cardClass = `product-card ${brandClass(product.company)}`
 
-  const name = getText(product.name, lang)
-  const category = product.category ? getText(product.category, lang) : ''
+  const name = lang === 'ar' && product.nameAr ? product.nameAr : product.name
+  const category = lang === 'ar' && product.categoryAr ? product.categoryAr : product.category
 
   const content = (
     <>
