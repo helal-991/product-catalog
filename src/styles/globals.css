@@ -794,6 +794,11 @@ img {
   color: var(--primary);
 }
 
+.back-link-detail {
+  font-size: 1.5rem;
+  padding: 12px 24px;
+}
+
 /* Category Filters */
 .category-filters {
   display: flex;
@@ -1185,5 +1190,15 @@ img {
 
   .header-inner {
     padding: 12px 16px;
+  }
+
+  .back-link {
+    font-size: 1rem;
+    padding: 4px 8px;
+  }
+
+  .back-link-detail {
+    font-size: 1.1rem;
+    padding: 8px 16px;
   }
 }
