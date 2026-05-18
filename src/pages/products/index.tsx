@@ -12,7 +12,7 @@ const brandNames: Record<string, string> = {
 export default function ProductsPage() {
   const router = useRouter()
   const { brand: brandSlug } = router.query
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
 
   const [products, setProducts] = useState<Product[]>([])
   const [dataLoading, setDataLoading] = useState(true)
@@ -47,10 +47,16 @@ export default function ProductsPage() {
     ? products.filter((p) => p.company.toLowerCase() === selectedBrand.toLowerCase())
     : products
 
-  const categories = Array.from(new Set(companyFiltered.map((p) => p.category.trim()).filter(Boolean))).sort()
+  const categories = Array.from(new Set(companyFiltered.map((p) => {
+    const cat = lang === 'ar' && p.categoryAr ? p.categoryAr : p.category
+    return cat.trim()
+  }).filter(Boolean))).sort()
 
   const categoryFiltered = selectedCategory
-    ? companyFiltered.filter((p) => p.category.trim().toLowerCase() === selectedCategory.toLowerCase())
+    ? companyFiltered.filter((p) => {
+        const pc = lang === 'ar' && p.categoryAr ? p.categoryAr.trim() : p.category.trim()
+        return pc.toLowerCase() === selectedCategory.toLowerCase()
+      })
     : companyFiltered
 
   const q = search.trim().toLowerCase()

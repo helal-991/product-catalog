@@ -13,7 +13,7 @@ function brandClass(company: string): string {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { lang } = useLanguage()
+  const { lang, t } = useLanguage()
   const thumbnail = product.imageUrls[0] || '/placeholder.svg'
   const productId = product.sku || product.name
   const cardClass = `product-card ${brandClass(product.company)}`
@@ -30,15 +30,15 @@ export default function ProductCard({ product }: ProductCardProps) {
         {category && <span className="product-category">{category}</span>}
         <h3 className="product-name">{name}</h3>
         <div className="product-meta">
-          <span className="product-sku">SKU {product.sku}</span>
+          <span className="product-sku">{t('SKU:')} {product.sku}</span>
           <div className="product-prices">
             <div className="product-card-price-box">
-              <span className="price-box-label">RRP</span>
-              <strong className="price-box-value">{fmtPrice(product.rrp)} EGP</strong>
+              <span className="price-box-label">{t('RRP')}</span>
+              <strong className="price-box-value">{fmtPrice(product.rrp)} {t('EGP')}</strong>
             </div>
             <div className="product-card-price-box">
-              <span className="price-box-label">RDP</span>
-              <strong className="price-box-value">{fmtPrice(product.rdp)} EGP</strong>
+              <span className="price-box-label">{t('RDP')}</span>
+              <strong className="price-box-value">{fmtPrice(product.rdp)} {t('EGP')}</strong>
             </div>
           </div>
         </div>
