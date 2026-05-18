@@ -44,9 +44,9 @@ export async function fetchProducts(): Promise<Product[]> {
     ),
     category: String(row['Category'] || row['category'] || '').trim(),
     company: String(row['Company'] || row['company'] || '').trim(),
-    nameAr: String(row['Name AR'] || row['name_ar'] || '').trim() || undefined,
-    descriptionAr: String(row['Description AR'] || row['description_ar'] || '').trim() || undefined,
-    categoryAr: String(row['Category AR'] || row['category_ar'] || '').trim() || undefined,
+    nameAr: String(row['اسم المنتج بالعربي'] || row['Name AR'] || row['name_ar'] || '').trim() || undefined,
+    descriptionAr: String(row['وصف المنتج بالعربي'] || row['Description AR'] || row['description_ar'] || '').trim() || undefined,
+    categoryAr: String(row['التصنيف بالعربي'] || row['Category AR'] || row['category_ar'] || '').trim() || undefined,
   }))
 
   return products.filter((p) => p.name)
