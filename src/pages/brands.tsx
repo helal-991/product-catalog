@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
 import { useLanguage } from '@/lib/i18n'
-import { isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product } from '@/lib/types'
 
 function brandSlug(name: string): string {
@@ -13,30 +11,13 @@ function brandLogoPath(name: string): string {
 }
 
 export default function BrandsPage() {
-  const router = useRouter()
   const { t } = useLanguage()
-  const [authed, setAuthed] = useState(false)
   const [brands, setBrands] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
-  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    isAuthenticated().then((ok) => {
-      if (!ok) {
-        router.replace('/')
-      } else {
-        setAuthed(true)
-        setChecking(false)
-        startInactivityTimer(() => router.replace('/'))
-      }
-    })
-    return () => stopInactivityTimer()
-  }, [router])
-
-  useEffect(() => {
-    if (!authed) return
     fetchBrands()
-  }, [authed])
+  }, [])
 
   const fetchBrands = async () => {
     try {
@@ -47,10 +28,6 @@ export default function BrandsPage() {
     } catch {} finally {
       setLoading(false)
     }
-  }
-
-  if (checking) {
-    return <div className="loading">{t('Loading...')}</div>
   }
 
   return (

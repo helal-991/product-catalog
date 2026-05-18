@@ -1,12 +1,6 @@
 const ar: Record<string, string> = {
-  // Login page
+  // Header
   'Product Catalog': 'كتالوج المنتجات',
-  'Browse products by brand': 'تصفح المنتجات حسب الماركة',
-  'Password': 'كلمة المرور',
-  'Enter catalog password': 'أدخل كلمة مرور الكتالوج',
-  'Access Catalog': 'الدخول للكتالوج',
-  'Checking...': 'جاري التحقق...',
-  'Incorrect password': 'كلمة المرور غير صحيحة',
   'Loading...': 'جاري التحميل...',
 
   // Brands page
@@ -34,8 +28,6 @@ const ar: Record<string, string> = {
   'Failed to load product': 'فشل تحميل المنتج',
   'Failed to load products': 'فشل تحميل المنتجات',
 
-  // Header
-  'Logout': 'تسجيل خروج',
 }
 
 export default ar

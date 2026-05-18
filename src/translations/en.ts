@@ -1,12 +1,6 @@
 const en: Record<string, string> = {
-  // Login page
+  // Header
   'Product Catalog': 'Product Catalog',
-  'Browse products by brand': 'Browse products by brand',
-  'Password': 'Password',
-  'Enter catalog password': 'Enter catalog password',
-  'Access Catalog': 'Access Catalog',
-  'Checking...': 'Checking...',
-  'Incorrect password': 'Incorrect password',
   'Loading...': 'Loading...',
 
   // Brands page
@@ -34,8 +28,6 @@ const en: Record<string, string> = {
   'Failed to load product': 'Failed to load product',
   'Failed to load products': 'Failed to load products',
 
-  // Header
-  'Logout': 'Logout',
 }
 
 export default en

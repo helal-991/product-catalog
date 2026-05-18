@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useLanguage } from '@/lib/i18n'
-import { isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product, fmtPrice, brandClass } from '@/lib/types'
 import ImageGallery from '@/components/ImageGallery'
 
@@ -9,28 +8,13 @@ export default function ProductDetailPage() {
   const router = useRouter()
   const { sku } = router.query
   const { t, lang } = useLanguage()
-  const [authed, setAuthed] = useState(false)
   const [product, setProduct] = useState<Product | null>(null)
   const [error, setError] = useState('')
-  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    isAuthenticated().then((ok) => {
-      if (!ok) {
-        router.replace('/')
-      } else {
-        setAuthed(true)
-        setChecking(false)
-        startInactivityTimer(() => router.replace('/'))
-      }
-    })
-    return () => stopInactivityTimer()
-  }, [router])
-
-  useEffect(() => {
-    if (!authed || !sku) return
+    if (!sku) return
     fetchProduct()
-  }, [authed, sku])
+  }, [sku])
 
   const fetchProduct = async () => {
     setError('')
@@ -47,14 +31,6 @@ export default function ProductDetailPage() {
     } catch (err: any) {
       setError(err.message)
     }
-  }
-
-  if (checking) {
-    return <div className="loading">{t('Loading...')}</div>
-  }
-
-  if (!authed) {
-    return <div className="loading">{t('Loading...')}</div>
   }
 
   if (error || !product) {

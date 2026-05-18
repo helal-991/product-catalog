@@ -1,7 +1,6 @@
-import React, { ReactNode, useEffect, useState } from 'react'
+import React, { ReactNode } from 'react'
 import { useRouter } from 'next/router'
 import { useLanguage } from '@/lib/i18n'
-import { isAuthenticated, logout, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import LanguageToggle from '@/components/LanguageToggle'
 
 interface LayoutProps {
@@ -10,28 +9,9 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const router = useRouter()
-  const { lang, t } = useLanguage()
-  const [authed, setAuthed] = useState(false)
+  const { t, lang } = useLanguage()
 
-  useEffect(() => {
-    const path = router.pathname
-    if (path === '/' || path === '/brands' || path === '/products' || path.startsWith('/products/')) {
-      isAuthenticated().then((ok) => {
-        if (ok) {
-          setAuthed(true)
-          startInactivityTimer(() => router.push('/'))
-        }
-      })
-    }
-    return () => stopInactivityTimer()
-  }, [router.pathname, router])
-
-  const handleLogout = async () => {
-    await logout()
-    router.push('/')
-  }
-
-  const showHeader = router.pathname !== '/' || authed
+  const showHeader = router.pathname !== '/'
 
   return (
     <div className={`layout ${lang === 'ar' ? 'rtl-layout' : ''}`}>
@@ -44,11 +24,6 @@ export default function Layout({ children }: LayoutProps) {
             </a>
             <div className="header-right">
               <LanguageToggle />
-              {authed && (
-                <button onClick={handleLogout} className="btn-outline btn-sm">
-                  {t('Logout')}
-                </button>
-              )}
             </div>
           </div>
         </header>

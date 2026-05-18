@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useLanguage } from '@/lib/i18n'
-import { isAuthenticated, startInactivityTimer, stopInactivityTimer } from '@/lib/auth'
 import { Product } from '@/lib/types'
 import ProductCard from '@/components/ProductCard'
 
@@ -15,31 +14,15 @@ export default function ProductsPage() {
   const { brand: brandSlug } = router.query
   const { t } = useLanguage()
 
-  const [authed, setAuthed] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
-  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    isAuthenticated().then((ok) => {
-      if (!ok) {
-        router.replace('/')
-      } else {
-        setAuthed(true)
-        setChecking(false)
-        startInactivityTimer(() => router.replace('/'))
-      }
-    })
-    return () => stopInactivityTimer()
-  }, [router])
-
-  useEffect(() => {
-    if (!authed) return
     fetchProducts()
-  }, [authed])
+  }, [])
 
   const fetchProducts = async () => {
     setDataLoading(true)
@@ -79,14 +62,6 @@ export default function ProductsPage() {
       p.category.toLowerCase().includes(q)
     )
   })
-
-  if (checking) {
-    return <div className="loading">{t('Loading...')}</div>
-  }
-
-  if (!authed) {
-    return <div className="loading">{t('Loading...')}</div>
-  }
 
   if (dataLoading) {
     return <div className="loading">{t('Loading products...')}</div>
